@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
-<link rel="icon" type="image/png" href="icon.png?v=2">
-<link rel="apple-touch-icon" href="icon.png?v=2">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#090d16">
@@ -10,6 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NutriCalibre">
+    <link rel="icon" type="image/png" href="icon.png?v=2">
+    <link rel="apple-touch-icon" href="icon.png?v=2">
     <title>NutriCalibre — Nutrition, IA & Planning Imprimable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -275,10 +275,24 @@
                             <label class="block text-xs font-medium text-slate-400 mb-1">Objectif</label>
                             <select id="inp-goal" onchange="handleGoalChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                                 <option value="" disabled selected>Choisir votre objectif...</option>
-                                <option value="loss_muscle">Sèche avec maintien musculaire (Protéines 2.2 g/kg)</option>
+                                <option value="loss_muscle">Sèche avec maintien musculaire</option>
                                 <option value="loss_classic">Perte de poids simple (Équilibré)</option>
                                 <option value="maintain">Maintien du poids</option>
                             </select>
+                        </div>
+
+                        <!-- Curseur réglable du ratio de protéines (calculé sur le poids objectif) -->
+                        <div class="p-4 rounded-xl bg-slate-950/90 border border-emerald-500/30 space-y-2">
+                            <div class="flex justify-between items-center gap-2">
+                                <label for="inp-prot-ratio" class="text-xs font-semibold text-emerald-400">Ratio de protéines (sur poids objectif)</label>
+                                <span id="prot-ratio-display" class="text-xs font-bold text-slate-950 bg-emerald-400 px-2.5 py-0.5 rounded-lg">1,8 g/kg</span>
+                            </div>
+                            <input type="range" id="inp-prot-ratio" min="1.2" max="2.2" step="0.1" value="1.8" oninput="updateProtRatioLabel()" class="w-full accent-emerald-500 cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-slate-400">
+                                <span>1,2–1,5 Perte classique</span>
+                                <span class="text-emerald-400 font-medium">1,6–2,0 Maintien musculaire</span>
+                                <span class="text-cyan-400">2,0–2,2 Sèche stricte</span>
+                            </div>
                         </div>
 
                         <!-- Rythme de perte -->
@@ -374,6 +388,11 @@
                                     <span id="res-fats" class="text-base font-extrabold text-white mt-0.5 block">-- g</span>
                                     <span class="text-[9px] text-slate-400">Cible jour</span>
                                 </div>
+                            </div>
+
+                            <!-- Formule protéines appliquée -->
+                            <div id="res-prot-formula" class="text-[11px] text-emerald-300 bg-emerald-950/35 border border-emerald-500/30 rounded-lg px-3 py-2 text-center font-medium">
+                                Calculé sur votre poids objectif : --
                             </div>
                         </div>
                     </div>
@@ -777,14 +796,18 @@
                                 <input type="number" step="0.5" id="m-chest" placeholder="Ex: 102" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="text-[11px] text-slate-400 block mb-1">Hanches (cm)</label>
+                                <input type="number" step="0.5" id="m-hips" placeholder="Ex: 96" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white">
+                            </div>
                             <div>
                                 <label class="text-[11px] text-slate-400 block mb-1">Bras (cm)</label>
-                                <input type="number" step="0.5" id="m-arm" placeholder="Ex: 36" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                                <input type="number" step="0.5" id="m-arm" placeholder="Ex: 36" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white">
                             </div>
                             <div>
                                 <label class="text-[11px] text-slate-400 block mb-1">Cuisses (cm)</label>
-                                <input type="number" step="0.5" id="m-thigh" placeholder="Ex: 58" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                                <input type="number" step="0.5" id="m-thigh" placeholder="Ex: 58" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white">
                             </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-xs shadow-lg transition">+ Enregistrer ce relevé</button>
@@ -816,6 +839,7 @@
                             <th class="py-2 px-3">Poids</th>
                             <th class="py-2 px-3">Taille</th>
                             <th class="py-2 px-3">Poitrine</th>
+                            <th class="py-2 px-3">Hanches</th>
                             <th class="py-2 px-3">Bras</th>
                             <th class="py-2 px-3">Cuisses</th>
                             <th class="py-2 px-3 text-right">Action</th>
@@ -1131,6 +1155,12 @@
             livePreviewMetabolism();
         }
 
+        function updateProtRatioLabel() {
+            const pr = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
+            document.getElementById("prot-ratio-display").textContent = `${pr.toFixed(1).replace('.', ',')} g/kg`;
+            livePreviewMetabolism();
+        }
+
         function computeMetabolism(d) {
             let bmr = (10 * d.weight) + (6.25 * d.height) - (5 * d.age) + (d.sex === "homme" ? 5 : -161);
             bmr = Math.round(bmr);
@@ -1142,28 +1172,35 @@
             const rawTargetKcal = tdee + dailyDiff;
             const targetKcal = Math.max(1150, rawTargetKcal);
 
-            const protPerKg = d.goal === "loss_muscle" ? 2.2 : (d.goal === "loss_classic" ? 1.8 : 1.6);
-            const targetProt = Math.round(d.weight * protPerKg);
-            const targetFats = Math.round(d.weight * 0.85);
+            // Protéines calculées sur le poids objectif (ou poids actuel si non renseigné) avec le curseur réglable
+            const protRatio = parseFloat(d.protRatio) || 1.8;
+            const hasTargetWeight = d.targetWeight && !isNaN(d.targetWeight) && d.targetWeight > 0;
+            const refWeight = hasTargetWeight ? d.targetWeight : d.weight;
+            const refLabel = hasTargetWeight ? "votre poids objectif" : "votre poids actuel";
+            const targetProt = Math.round(refWeight * protRatio);
+            const protFormula = `Calculé sur ${refLabel} : ${refWeight} kg × ${protRatio.toFixed(1).replace('.', ',')} g/kg = ${targetProt} g`;
+
+            const targetFats = Math.round(refWeight * 0.85);
             const targetCarbs = Math.round(Math.max(160, targetKcal - (targetProt * 4) - (targetFats * 9)) / 4);
 
             const minSafeKcal = d.sex === "homme" ? 1500 : 1200;
+            const deficitPct = ((tdee - rawTargetKcal) / tdee) * 100;
             let isTooFast = false, alertText = "", adviceText = "";
-            if (isLoss && (rate > 0.8 || Math.abs(dailyDiff) > 850 || rawTargetKcal < minSafeKcal)) {
+            if (isLoss && (rate > 0.8 || deficitPct > 25 || rawTargetKcal < minSafeKcal)) {
                 isTooFast = true;
                 const safeKcal = Math.max(minSafeKcal, Math.round(tdee - 550));
-                alertText = `Rythme choisi : ${rate.toFixed(1)} kg/semaine (déficit de ${Math.abs(dailyDiff)} kcal/j, cible ${rawTargetKcal} kcal).`;
-                adviceText = `Au-delà de 0,8 kg/semaine, le risque de fonte musculaire, de fatigue et d'effet rebond augmente fortement. Visez plutôt 0,5 kg/semaine autour de ${safeKcal} kcal/j avec ${targetProt}g de protéines.`;
+                alertText = `Rythme choisi : ${rate.toFixed(1)} kg/semaine (déficit de ${Math.round(deficitPct)} %, cible ${rawTargetKcal} kcal).`;
+                adviceText = `Au-delà de 0,8 kg/semaine ou 25 % de déficit, le risque de fonte musculaire, de fatigue et d'effet rebond augmente fortement. Visez plutôt 0,5 kg/semaine autour de ${safeKcal} kcal/j avec ${targetProt}g de protéines.`;
             }
 
             let etaText = "Maintien du poids";
-            const deltaW = Math.abs(d.weight - d.targetWeight);
+            const deltaW = hasTargetWeight ? Math.abs(d.weight - d.targetWeight) : 0;
             if (isLoss && deltaW > 0.1) {
                 const wks = Math.ceil(deltaW / rate);
                 etaText = `~${wks} semaine${wks > 1 ? "s" : ""} (${deltaW.toFixed(1)} kg à ${rate.toFixed(1)} kg/sem)`;
             }
 
-            return { bmr, tdee, targetKcal, dailyDiff, targetProt, targetCarbs, targetFats, isTooFast, alertText, adviceText, etaText };
+            return { bmr, tdee, targetKcal, dailyDiff, targetProt, protRatio, protFormula, targetCarbs, targetFats, isTooFast, alertText, adviceText, etaText };
         }
 
         function livePreviewMetabolism() {
@@ -1175,9 +1212,10 @@
             const activity = parseFloat(document.getElementById("inp-activity").value);
             const goal = document.getElementById("inp-goal").value;
             const rate = parseFloat(document.getElementById("inp-rate").value) || 0.5;
+            const protRatio = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
 
             if (!sex || !age || !height || !weight || !activity || !goal) return;
-            renderMetabolismCard(computeMetabolism({ sex, age, height, weight, targetWeight: isNaN(targetWeight) ? weight : targetWeight, activity, goal, rate }), false);
+            renderMetabolismCard(computeMetabolism({ sex, age, height, weight, targetWeight: isNaN(targetWeight) ? null : targetWeight, activity, goal, rate, protRatio }), false);
         }
 
         function renderMetabolismCard(c, saved) {
@@ -1192,6 +1230,7 @@
             document.getElementById("res-prot").textContent = `${c.targetProt} g`;
             document.getElementById("res-carbs").textContent = `${c.targetCarbs} g`;
             document.getElementById("res-fats").textContent = `${c.targetFats} g`;
+            document.getElementById("res-prot-formula").textContent = c.protFormula || "";
 
             const alertBox = document.getElementById("metabolic-alert");
             if (c.isTooFast) {
@@ -1213,17 +1252,18 @@
             const activity = parseFloat(document.getElementById("inp-activity").value);
             const goal = document.getElementById("inp-goal").value;
             const rate = parseFloat(document.getElementById("inp-rate").value) || 0.5;
+            const protRatio = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
 
             if (!sex || !age || !height || !weight || !targetWeight || !activity || !goal) {
                 showToast("Remplissez tous les champs du profil.", "error");
                 return;
             }
 
-            const calc = computeMetabolism({ sex, age, height, weight, targetWeight, activity, goal, rate });
-            appState.profile = { sex, age, height, weight, targetWeight, activity, goal, rate, calc };
+            const calc = computeMetabolism({ sex, age, height, weight, targetWeight, activity, goal, rate, protRatio });
+            appState.profile = { sex, age, height, weight, targetWeight, activity, goal, rate, protRatio, calc };
 
             if (appState.measurements.length === 0) {
-                appState.measurements.push({ id: "init_" + Date.now(), date: getTodayStr(), weight, waist: null, chest: null, arm: null, thigh: null });
+                appState.measurements.push({ id: "init_" + Date.now(), date: getTodayStr(), weight, waist: null, chest: null, hips: null, arm: null, thigh: null });
             }
 
             saveState();
@@ -1854,6 +1894,7 @@ Réponds UNIQUEMENT en JSON strict :
                 id: "m_" + Date.now(), date, weight,
                 waist: parseFloat(document.getElementById("m-waist").value) || null,
                 chest: parseFloat(document.getElementById("m-chest").value) || null,
+                hips: parseFloat(document.getElementById("m-hips").value) || null,
                 arm: parseFloat(document.getElementById("m-arm").value) || null,
                 thigh: parseFloat(document.getElementById("m-thigh").value) || null
             });
@@ -1883,7 +1924,7 @@ Réponds UNIQUEMENT en JSON strict :
                 document.getElementById("kpi-goal-pct").textContent = "Avancement : 0%";
                 document.getElementById("kpi-waist").textContent = "-- cm";
                 document.getElementById("kpi-waist-diff").textContent = "Évolution : --";
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">Aucun relevé enregistré.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500">Aucun relevé enregistré.</td></tr>`;
                 drawWeightChart();
                 return;
             }
@@ -1915,6 +1956,7 @@ Réponds UNIQUEMENT en JSON strict :
                     <td class="py-2 px-3 font-bold text-cyan-400">${m.weight} kg</td>
                     <td class="py-2 px-3 text-slate-300">${m.waist ? m.waist + " cm" : "-"}</td>
                     <td class="py-2 px-3 text-slate-300">${m.chest ? m.chest + " cm" : "-"}</td>
+                    <td class="py-2 px-3 text-slate-300">${m.hips ? m.hips + " cm" : "-"}</td>
                     <td class="py-2 px-3 text-slate-300">${m.arm ? m.arm + " cm" : "-"}</td>
                     <td class="py-2 px-3 text-slate-300">${m.thigh ? m.thigh + " cm" : "-"}</td>
                     <td class="py-2 px-3 text-right"><button onclick="deleteMeasurement('${m.id}')" class="text-slate-500 hover:text-rose-400">Supprimer</button></td>
@@ -2040,6 +2082,9 @@ Réponds UNIQUEMENT en JSON strict :
                     document.getElementById("inp-rate").value = p.rate;
                     document.getElementById("rate-display").textContent = `${p.rate.toFixed(1)} kg / semaine`;
                 }
+                const pr = p.protRatio || 1.8;
+                document.getElementById("inp-prot-ratio").value = pr;
+                document.getElementById("prot-ratio-display").textContent = `${pr.toFixed(1).replace('.', ',')} g/kg`;
                 document.getElementById("welcome-banner").classList.add("hidden");
                 renderMetabolismCard(p.calc, true);
             }
