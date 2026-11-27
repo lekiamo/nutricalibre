@@ -573,23 +573,34 @@
                             <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl">📸</span>
                             <div>
                                 <h3 class="text-sm font-bold text-white">Scanner Photo d'Assiette</h3>
-                                <p class="text-[11px] text-slate-400">Prenez en photo votre plat : Gemini 2.5 Flash identifie chaque aliment et estime les grammes.</p>
+                                <p class="text-[11px] text-slate-400">Prenez en photo votre plat : Gemini 3.8 Flash identifie chaque aliment et estime les grammes.</p>
                             </div>
                         </div>
 
-                        <label for="plate-photo-input" class="border-2 border-dashed border-slate-700 hover:border-cyan-500/70 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/60 transition min-h-[190px] overflow-hidden">
+                        <div class="border-2 border-dashed border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-950/60 min-h-[160px] overflow-hidden">
                             <img id="plate-preview-img" class="hidden max-h-48 rounded-xl object-contain mb-2" alt="Aperçu du plat">
                             <div id="plate-upload-placeholder" class="space-y-1.5">
                                 <span class="text-3xl block">🍽️</span>
-                                <span class="text-xs font-semibold text-cyan-400 block">Prendre une photo ou choisir une image</span>
-                                <span class="text-[10px] text-slate-500 block">Caméra arrière Android ou galerie</span>
+                                <span class="text-xs font-semibold text-slate-300 block">Choisissez une source ci-dessous</span>
+                                <span class="text-[10px] text-slate-500 block">Photo directe ou image depuis votre galerie</span>
                             </div>
-                            <input type="file" id="plate-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePlateImageUpload(event)">
-                        </label>
+                        </div>
+
+                        <!-- Deux boutons séparés : Caméra directe OU Galerie téléphone -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <label for="plate-camera-input" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 text-cyan-300 font-semibold text-xs text-center cursor-pointer transition flex items-center justify-center gap-1.5">
+                                <span>📷</span> Appareil photo
+                            </label>
+                            <label for="plate-gallery-input" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 text-emerald-300 font-semibold text-xs text-center cursor-pointer transition flex items-center justify-center gap-1.5">
+                                <span>🖼️</span> Galerie
+                            </label>
+                            <input type="file" id="plate-camera-input" accept="image/*" capture="environment" class="hidden" onchange="handlePlateImageUpload(event)">
+                            <input type="file" id="plate-gallery-input" accept="image/*" class="hidden" onchange="handlePlateImageUpload(event)">
+                        </div>
                     </div>
 
                     <button id="btn-analyze-photo" onclick="analyzePlatePhoto()" disabled class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-lg transition">
-                        ✨ Analyser la photo avec Gemini 2.5 Flash
+                        ✨ Analyser la photo avec Gemini 3.8 Flash
                     </button>
                 </div>
 
@@ -611,12 +622,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
                                 </svg>
                             </button>
-                            <span id="mic-status" class="text-xs text-slate-400 mt-2.5">Appuyez sur le micro pour parler</span>
+                            <span id="mic-status" class="text-xs text-slate-400 mt-2.5 text-center px-2">Appuyez sur le micro pour parler</span>
                         </div>
 
                         <div>
-                            <label class="text-[11px] text-slate-400 block mb-1">Texte dicté (éditable) :</label>
-                            <textarea id="voice-transcript" rows="2" placeholder="Ex: 200g de blanc de poulet, 150g de riz basmati cuit et 1 cuillère d'huile d'olive..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"></textarea>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[11px] text-slate-400">Texte dicté (éditable) :</label>
+                                <button type="button" onclick="clearVoiceTranscript()" class="text-[11px] text-slate-400 hover:text-rose-400 font-medium transition">Effacer</button>
+                            </div>
+                            <textarea id="voice-transcript" rows="3" placeholder="Ex: 200g de blanc de poulet, 150g de riz basmati cuit et 1 cuillère d'huile d'olive..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"></textarea>
                         </div>
                     </div>
 
@@ -698,6 +712,12 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Option priorité Four / Airfryer -->
+                <label class="flex items-center gap-2.5 cursor-pointer select-none pt-1 text-xs text-slate-300 w-fit">
+                    <input type="checkbox" id="plan-prefer-airfryer" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
+                    <span>🔥 Prioriser les recettes healthy au <strong class="text-cyan-400">Four</strong> et à l'<strong class="text-emerald-400">Airfryer</strong></span>
+                </label>
 
                 <div id="plan-actions-bar" class="hidden pt-3 border-t border-slate-800 flex flex-wrap items-center justify-end gap-2">
                     <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-200 text-slate-950 font-extrabold text-xs shadow-lg transition flex items-center gap-2">
@@ -873,692 +893,89 @@
 
     <script>
         // =========================================================================
-        // 1. GESTION DE LA CLÉ API GEMINI 2.5 FLASH (LOCALSTORAGE)
+        // 1. GESTION DE LA CLÉ API GEMINI 3.8 FLASH (LOCALSTORAGE)
         // =========================================================================
         const API_KEY_STORAGE = "nutricalibre_gemini_api_key";
         const STATE_STORAGE = "nutricalibre_app_state_v1";
-        const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+        const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+        let activeGeminiModel = GEMINI_MODELS[0];
 
         function getStoredApiKey() {
-            return (localStorage.getItem(API_KEY_STORAGE) || "").trim();
-        }
-
-        function updateApiStatusBadge() {
-            const key = getStoredApiKey();
-            const badge = document.getElementById("api-status-badge");
-            const dot = document.getElementById("api-status-dot");
-            const text = document.getElementById("api-status-text");
-            const noKeyBanner = document.getElementById("ia-no-key-banner");
-
-            if (key.length > 10) {
-                badge.className = "px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/25";
-                dot.className = "w-2 h-2 rounded-full bg-emerald-400";
-                text.textContent = "IA Active";
-                if (noKeyBanner) noKeyBanner.classList.add("hidden");
-            } else {
-                badge.className = "px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition flex items-center gap-1.5 bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25";
-                dot.className = "w-2 h-2 rounded-full bg-amber-400";
-                text.textContent = "Clé API";
-                if (noKeyBanner) noKeyBanner.classList.remove("hidden");
-            }
-        }
-
-        function goToApiSettings() {
-            switchTab("profil");
-            const card = document.getElementById("api-settings-card");
-            card.scrollIntoView({ behavior: "smooth", block: "center" });
-            document.getElementById("inp-api-key").focus();
-        }
-
-        function toggleApiKeyVisibility() {
-            const inp = document.getElementById("inp-api-key");
-            const btn = document.getElementById("btn-toggle-key");
-            if (inp.type === "password") {
-                inp.type = "text";
-                btn.textContent = "Masquer";
-            } else {
-                inp.type = "password";
-                btn.textContent = "Afficher";
-            }
-        }
-
-        function saveApiKey() {
-            const val = document.getElementById("inp-api-key").value.trim();
-            if (!val) {
-                localStorage.removeItem(API_KEY_STORAGE);
-                updateApiStatusBadge();
-                showToast("Clé API supprimée.", "info");
-                return;
-            }
-            localStorage.setItem(API_KEY_STORAGE, val);
-            updateApiStatusBadge();
-            showToast("Clé API enregistrée sur votre appareil !", "success");
-        }
-
+// ... existing code ... -->
         async function callGeminiFlash(payload) {
             const key = getStoredApiKey();
             if (!key) throw new Error("NO_API_KEY");
 
-            const url = `${GEMINI_ENDPOINT}?key=${encodeURIComponent(key)}`;
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData?.error?.message || `Erreur HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!text) throw new Error("Réponse vide de Gemini.");
-            return text;
-        }
-
-        function extractJsonFromText(rawText) {
-            const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
-            return JSON.parse(cleaned);
-        }
-
-        async function testApiKeyConnection() {
-            const inputVal = document.getElementById("inp-api-key").value.trim();
-            if (inputVal) localStorage.setItem(API_KEY_STORAGE, inputVal);
-            updateApiStatusBadge();
-
-            const feedback = document.getElementById("api-test-feedback");
-            const btn = document.getElementById("btn-test-api");
-            if (!getStoredApiKey()) {
-                feedback.className = "text-xs font-medium text-amber-400";
-                feedback.textContent = "Veuillez coller votre clé API Gemini (AIza...) avant de tester.";
-                feedback.classList.remove("hidden");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = "Test en cours...";
-            feedback.classList.add("hidden");
-
-            try {
-                await callGeminiFlash({
-                    contents: [{ role: "user", parts: [{ text: "Réponds simplement OK." }] }]
-                });
-                feedback.className = "text-xs font-semibold text-emerald-400";
-                feedback.textContent = "✅ Connexion réussie à Gemini 2.5 Flash ! Votre IA est opérationnelle.";
-                feedback.classList.remove("hidden");
-                showToast("Connexion Gemini validée !", "success");
-            } catch (err) {
-                feedback.className = "text-xs font-semibold text-rose-400";
-                feedback.textContent = `❌ Échec de connexion : ${err.message}`;
-                feedback.classList.remove("hidden");
-                showToast("Clé API invalide ou erreur réseau.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Tester la connexion";
-            }
-        }
-
-        // =========================================================================
-        // 2. BASE D'ALIMENTS FRANÇAISE (POUR 100G)
-        // =========================================================================
-        const DEFAULT_FOODS = [
-            { id: 'f1', name: 'Blanc de poulet (cuit)', cat: 'Protéines', kcal: 165, p: 31, c: 0, f: 3.6 },
-            { id: 'f2', name: 'Escalope de dinde', cat: 'Protéines', kcal: 135, p: 29, c: 0, f: 1.5 },
-            { id: 'f3', name: 'Bœuf haché 5% MG', cat: 'Protéines', kcal: 137, p: 21, c: 0, f: 5 },
-            { id: 'f4', name: 'Thon au naturel (égoutté)', cat: 'Protéines', kcal: 116, p: 26, c: 0, f: 1 },
-            { id: 'f5', name: 'Pavé de saumon', cat: 'Protéines', kcal: 208, p: 20, c: 0, f: 13 },
-            { id: 'f6', name: 'Filet de cabillaud', cat: 'Protéines', kcal: 82, p: 18, c: 0, f: 0.7 },
-            { id: 'f7', name: 'Œuf entier (~60g/unité)', cat: 'Protéines', kcal: 145, p: 12.6, c: 0.7, f: 10 },
-            { id: 'f8', name: 'Blanc d\'œuf', cat: 'Protéines', kcal: 52, p: 11, c: 0.7, f: 0.2 },
-            { id: 'f9', name: 'Skyr nature 0%', cat: 'Laitiers', kcal: 57, p: 10, c: 4, f: 0.2 },
-            { id: 'f10', name: 'Fromage blanc 0%', cat: 'Laitiers', kcal: 48, p: 8, c: 4, f: 0.1 },
-            { id: 'f11', name: 'Whey Isolate (poudre)', cat: 'Laitiers', kcal: 370, p: 84, c: 3, f: 1.5 },
-            { id: 'f12', name: 'Riz basmati (cuit)', cat: 'Féculents', kcal: 130, p: 2.7, c: 28, f: 0.3 },
-            { id: 'f13', name: 'Pain complet', cat: 'Féculents', kcal: 247, p: 9, c: 43, f: 3.4 },
-            { id: 'f14', name: 'Patate douce (cuite)', cat: 'Féculents', kcal: 86, p: 1.6, c: 20, f: 0.1 },
-            { id: 'f15', name: 'Pomme de terre vapeur', cat: 'Féculents', kcal: 77, p: 2, c: 17, f: 0.1 },
-            { id: 'f16', name: 'Pâtes complètes (cuites)', cat: 'Féculents', kcal: 124, p: 5, c: 25, f: 0.9 },
-            { id: 'f17', name: 'Quinoa (cuit)', cat: 'Féculents', kcal: 120, p: 4.4, c: 21, f: 1.9 },
-            { id: 'f18', name: 'Brocoli (cuit)', cat: 'Légumes', kcal: 35, p: 2.4, c: 7, f: 0.4 },
-            { id: 'f19', name: 'Haricots verts', cat: 'Légumes', kcal: 31, p: 1.8, c: 7, f: 0.1 },
-            { id: 'f20', name: 'Courgette', cat: 'Légumes', kcal: 17, p: 1.2, c: 3.1, f: 0.3 },
-            { id: 'f21', name: 'Épinards frais', cat: 'Légumes', kcal: 23, p: 2.9, c: 3.6, f: 0.4 },
-            { id: 'f22', name: 'Tomate', cat: 'Légumes', kcal: 18, p: 0.9, c: 3.9, f: 0.2 },
-            { id: 'f23', name: 'Banane', cat: 'Fruits', kcal: 89, p: 1.1, c: 23, f: 0.3 },
-            { id: 'f24', name: 'Pomme', cat: 'Fruits', kcal: 52, p: 0.3, c: 14, f: 0.2 },
-            { id: 'f25', name: 'Fruits rouges', cat: 'Fruits', kcal: 57, p: 0.7, c: 14, f: 0.3 },
-            { id: 'f26', name: 'Huile d\'olive', cat: 'Lipides', kcal: 884, p: 0, c: 0, f: 100 },
-            { id: 'f27', name: 'Avocat', cat: 'Lipides', kcal: 160, p: 2, c: 8.5, f: 15 },
-            { id: 'f28', name: 'Amandes', cat: 'Lipides', kcal: 579, p: 21, c: 22, f: 50 }
-        ];
-
-        // =========================================================================
-        // 3. ÉTAT GLOBAL (ÉCRAN VIERGE PAR DÉFAUT)
-        // =========================================================================
-        function getVirginState() {
-            return { profile: null, customFoods: [], dailyLogs: {}, measurements: [], mealPlan: null };
-        }
-
-        let appState = loadState();
-        let selectedFoodObj = null;
-        let currentPlateBase64 = null;
-        let currentPlateMime = "image/jpeg";
-        let lastAiParsedItems = [];
-
-        function loadState() {
-            try {
-                const raw = localStorage.getItem(STATE_STORAGE);
-                return raw ? { ...getVirginState(), ...JSON.parse(raw) } : getVirginState();
-            } catch {
-                return getVirginState();
-            }
-        }
-
-        function saveState() {
-            localStorage.setItem(STATE_STORAGE, JSON.stringify(appState));
-        }
-
-        function getTodayStr() {
-            return new Date().toISOString().split("T")[0];
-        }
-
-        // =========================================================================
-        // 4. TOASTS, MODALE & NAVIGATION
-        // =========================================================================
-        function showToast(msg, type = "success") {
-            const container = document.getElementById("toast-container");
-            const el = document.createElement("div");
-            const styles = {
-                success: "bg-emerald-950/95 border-emerald-500 text-emerald-200",
-                error: "bg-rose-950/95 border-rose-500 text-rose-200",
-                info: "bg-slate-900/95 border-cyan-500 text-cyan-200"
-            };
-            el.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center gap-2 transition-opacity duration-300 ${styles[type] || styles.info}`;
-            el.innerHTML = `<span>${type === "success" ? "✅" : type === "error" ? "❌" : "ℹ️"}</span><span>${msg}</span>`;
-            container.appendChild(el);
-            setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3400);
-        }
-
-        function showConfirmModal(title, message, onConfirm) {
-            const modal = document.getElementById("confirm-modal");
-            document.getElementById("confirm-title").textContent = title;
-            document.getElementById("confirm-message").textContent = message;
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-
-            const ok = document.getElementById("confirm-ok");
-            const cancel = document.getElementById("confirm-cancel");
-            const close = () => { modal.classList.add("hidden"); modal.classList.remove("flex"); ok.onclick = null; cancel.onclick = null; };
-            cancel.onclick = close;
-            ok.onclick = () => { close(); onConfirm(); };
-        }
-
-        function requestResetApp() {
-            showConfirmModal(
-                "Réinitialiser NutriCalibre ?",
-                "Votre profil, votre journal, votre planning et vos mensurations seront effacés pour revenir à un écran vierge (votre clé API reste conservée si vous ne la supprimez pas manuellement).",
-                () => {
-                    localStorage.removeItem(STATE_STORAGE);
-                    appState = getVirginState();
-                    document.getElementById("profile-form").reset();
-                    document.getElementById("rate-container").classList.add("hidden");
-                    document.getElementById("results-card").classList.add("hidden");
-                    document.getElementById("results-placeholder").classList.remove("hidden");
-                    document.getElementById("welcome-banner").classList.remove("hidden");
-                    refreshAllViews();
-                    switchTab("profil");
-                    showToast("Application réinitialisée à zéro !", "info");
-                }
-            );
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll(".tab-content").forEach(s => s.classList.add("hidden"));
-            const target = document.getElementById(`tab-${tabId}`);
-            if (target) target.classList.remove("hidden");
-
-            document.querySelectorAll(".nav-btn").forEach(b => {
-                const active = b.dataset.tab === tabId;
-                b.classList.toggle("bg-emerald-500/20", active);
-                b.classList.toggle("text-emerald-400", active);
-                b.classList.toggle("border", active);
-                b.classList.toggle("border-emerald-500/30", active);
-                b.classList.toggle("text-slate-400", !active);
-            });
-
-            document.querySelectorAll(".mobile-nav-btn").forEach(b => {
-                const active = b.dataset.tab === tabId;
-                b.classList.toggle("text-emerald-400", active);
-                b.classList.toggle("bg-emerald-500/10", active);
-                b.classList.toggle("text-slate-400", !active);
-            });
-
-            if (tabId === "journal") renderJournalView();
-            if (tabId === "ia") updateApiStatusBadge();
-            if (tabId === "planning") renderPlanningView();
-            if (tabId === "suivi") { renderMeasurementsView(); setTimeout(drawWeightChart, 50); }
-        }
-
-        // =========================================================================
-        // 5. CALCULATEUR MÉTABOLIQUE (MIFFLIN-ST JEOR)
-        // =========================================================================
-        function handleGoalChange() {
-            const g = document.getElementById("inp-goal").value;
-            document.getElementById("rate-container").classList.toggle("hidden", !(g === "loss_muscle" || g === "loss_classic"));
-            livePreviewMetabolism();
-        }
-
-        function updateRateLabel() {
-            const r = parseFloat(document.getElementById("inp-rate").value);
-            document.getElementById("rate-display").textContent = `${r.toFixed(1)} kg / semaine`;
-            livePreviewMetabolism();
-        }
-
-        function updateProtRatioLabel() {
-            const pr = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
-            document.getElementById("prot-ratio-display").textContent = `${pr.toFixed(1).replace('.', ',')} g/kg`;
-            livePreviewMetabolism();
-        }
-
-        function computeMetabolism(d) {
-            let bmr = (10 * d.weight) + (6.25 * d.height) - (5 * d.age) + (d.sex === "homme" ? 5 : -161);
-            bmr = Math.round(bmr);
-            const tdee = Math.round(bmr * d.activity);
-
-            const isLoss = d.goal === "loss_muscle" || d.goal === "loss_classic";
-            const rate = parseFloat(d.rate) || 0.5;
-            const dailyDiff = isLoss ? -Math.round(rate * 1100) : 0;
-            const rawTargetKcal = tdee + dailyDiff;
-            const targetKcal = Math.max(1150, rawTargetKcal);
-
-            // Protéines calculées sur le poids objectif (ou poids actuel si non renseigné) avec le curseur réglable
-            const protRatio = parseFloat(d.protRatio) || 1.8;
-            const hasTargetWeight = d.targetWeight && !isNaN(d.targetWeight) && d.targetWeight > 0;
-            const refWeight = hasTargetWeight ? d.targetWeight : d.weight;
-            const refLabel = hasTargetWeight ? "votre poids objectif" : "votre poids actuel";
-            const targetProt = Math.round(refWeight * protRatio);
-            const protFormula = `Calculé sur ${refLabel} : ${refWeight} kg × ${protRatio.toFixed(1).replace('.', ',')} g/kg = ${targetProt} g`;
-
-            const targetFats = Math.round(refWeight * 0.85);
-            const targetCarbs = Math.round(Math.max(160, targetKcal - (targetProt * 4) - (targetFats * 9)) / 4);
-
-            const minSafeKcal = d.sex === "homme" ? 1500 : 1200;
-            const deficitPct = ((tdee - rawTargetKcal) / tdee) * 100;
-            let isTooFast = false, alertText = "", adviceText = "";
-            if (isLoss && (rate > 0.8 || deficitPct > 25 || rawTargetKcal < minSafeKcal)) {
-                isTooFast = true;
-                const safeKcal = Math.max(minSafeKcal, Math.round(tdee - 550));
-                alertText = `Rythme choisi : ${rate.toFixed(1)} kg/semaine (déficit de ${Math.round(deficitPct)} %, cible ${rawTargetKcal} kcal).`;
-                adviceText = `Au-delà de 0,8 kg/semaine ou 25 % de déficit, le risque de fonte musculaire, de fatigue et d'effet rebond augmente fortement. Visez plutôt 0,5 kg/semaine autour de ${safeKcal} kcal/j avec ${targetProt}g de protéines.`;
-            }
-
-            let etaText = "Maintien du poids";
-            const deltaW = hasTargetWeight ? Math.abs(d.weight - d.targetWeight) : 0;
-            if (isLoss && deltaW > 0.1) {
-                const wks = Math.ceil(deltaW / rate);
-                etaText = `~${wks} semaine${wks > 1 ? "s" : ""} (${deltaW.toFixed(1)} kg à ${rate.toFixed(1)} kg/sem)`;
-            }
-
-            return { bmr, tdee, targetKcal, dailyDiff, targetProt, protRatio, protFormula, targetCarbs, targetFats, isTooFast, alertText, adviceText, etaText };
-        }
-
-        function livePreviewMetabolism() {
-            const sex = document.getElementById("inp-sex").value;
-            const age = parseInt(document.getElementById("inp-age").value);
-            const height = parseInt(document.getElementById("inp-height").value);
-            const weight = parseFloat(document.getElementById("inp-weight").value);
-            const targetWeight = parseFloat(document.getElementById("inp-target-weight").value);
-            const activity = parseFloat(document.getElementById("inp-activity").value);
-            const goal = document.getElementById("inp-goal").value;
-            const rate = parseFloat(document.getElementById("inp-rate").value) || 0.5;
-            const protRatio = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
-
-            if (!sex || !age || !height || !weight || !activity || !goal) return;
-            renderMetabolismCard(computeMetabolism({ sex, age, height, weight, targetWeight: isNaN(targetWeight) ? null : targetWeight, activity, goal, rate, protRatio }), false);
-        }
-
-        function renderMetabolismCard(c, saved) {
-            document.getElementById("results-placeholder").classList.add("hidden");
-            document.getElementById("results-card").classList.remove("hidden");
-            document.getElementById("res-profile-badge").textContent = saved ? "Enregistré ✓" : "Aperçu";
-            document.getElementById("res-bmr").textContent = `${c.bmr} kcal`;
-            document.getElementById("res-tdee").textContent = `${c.tdee} kcal`;
-            document.getElementById("res-target-kcal").textContent = `${c.targetKcal} kcal`;
-            document.getElementById("res-diff-kcal").textContent = `${c.dailyDiff} kcal / jour`;
-            document.getElementById("res-eta").textContent = c.etaText;
-            document.getElementById("res-prot").textContent = `${c.targetProt} g`;
-            document.getElementById("res-carbs").textContent = `${c.targetCarbs} g`;
-            document.getElementById("res-fats").textContent = `${c.targetFats} g`;
-            document.getElementById("res-prot-formula").textContent = c.protFormula || "";
-
-            const alertBox = document.getElementById("metabolic-alert");
-            if (c.isTooFast) {
-                alertBox.classList.remove("hidden");
-                document.getElementById("metabolic-alert-text").textContent = c.alertText;
-                document.getElementById("metabolic-advice-text").textContent = c.adviceText;
-            } else {
-                alertBox.classList.add("hidden");
-            }
-        }
-
-        document.getElementById("profile-form").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const sex = document.getElementById("inp-sex").value;
-            const age = parseInt(document.getElementById("inp-age").value);
-            const height = parseInt(document.getElementById("inp-height").value);
-            const weight = parseFloat(document.getElementById("inp-weight").value);
-            const targetWeight = parseFloat(document.getElementById("inp-target-weight").value);
-            const activity = parseFloat(document.getElementById("inp-activity").value);
-            const goal = document.getElementById("inp-goal").value;
-            const rate = parseFloat(document.getElementById("inp-rate").value) || 0.5;
-            const protRatio = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
-
-            if (!sex || !age || !height || !weight || !targetWeight || !activity || !goal) {
-                showToast("Remplissez tous les champs du profil.", "error");
-                return;
-            }
-
-            const calc = computeMetabolism({ sex, age, height, weight, targetWeight, activity, goal, rate, protRatio });
-            appState.profile = { sex, age, height, weight, targetWeight, activity, goal, rate, protRatio, calc };
-
-            if (appState.measurements.length === 0) {
-                appState.measurements.push({ id: "init_" + Date.now(), date: getTodayStr(), weight, waist: null, chest: null, hips: null, arm: null, thigh: null });
-            }
-
-            saveState();
-            document.getElementById("welcome-banner").classList.add("hidden");
-            renderMetabolismCard(calc, true);
-            updateHeaderSubtitle();
-            showToast("Profil métabolique enregistré !", "success");
-        });
-
-        function updateHeaderSubtitle() {
-            const sub = document.getElementById("header-subtitle");
-            if (!appState.profile) {
-                sub.textContent = "Écran vierge — Configurez votre profil";
-            } else {
-                const c = appState.profile.calc;
-                sub.textContent = `${c.targetKcal} kcal • Min ${c.targetProt}g P • Max ${c.targetCarbs}g G`;
-            }
-        }
-
-        // =========================================================================
-        // 6. JOURNAL & JAUGES MACROS
-        // =========================================================================
-        function getAllFoods() { return [...appState.customFoods, ...DEFAULT_FOODS]; }
-
-        function openFoodModal(meal = "Déjeuner") {
-            document.getElementById("sel-food-meal").value = meal;
-            document.getElementById("food-modal").classList.remove("hidden");
-            document.getElementById("food-modal").classList.add("flex");
-            renderFoodLibrary();
-        }
-
-        function closeFoodModal() {
-            document.getElementById("food-modal").classList.add("hidden");
-            document.getElementById("food-modal").classList.remove("flex");
-        }
-
-        function toggleCustomFoodForm() { document.getElementById("custom-food-box").classList.toggle("hidden"); }
-
-        function saveCustomFood() {
-            const name = document.getElementById("cf-name").value.trim();
-            const kcal = parseFloat(document.getElementById("cf-kcal").value);
-            const p = parseFloat(document.getElementById("cf-prot").value) || 0;
-            const c = parseFloat(document.getElementById("cf-carbs").value) || 0;
-            const f = parseFloat(document.getElementById("cf-fats").value) || 0;
-            if (!name || isNaN(kcal)) { showToast("Indiquez le nom et les kcal/100g.", "error"); return; }
-
-            appState.customFoods.unshift({ id: "cf_" + Date.now(), name, cat: "Perso", kcal, p, c, f });
-            saveState();
-            ["cf-name", "cf-kcal", "cf-prot", "cf-carbs", "cf-fats"].forEach(id => document.getElementById(id).value = "");
-            document.getElementById("custom-food-box").classList.add("hidden");
-            renderFoodLibrary();
-            showToast(`"${name}" ajouté !`, "success");
-        }
-
-        function renderFoodLibrary() {
-            const q = document.getElementById("food-search").value.toLowerCase().trim();
-            const cat = document.getElementById("food-category").value;
-            const filtered = getAllFoods().filter(f => f.name.toLowerCase().includes(q) && (cat === "all" || f.cat === cat));
-            const listEl = document.getElementById("food-library-list");
-            if (!filtered.length) { listEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-5">Aucun aliment trouvé.</p>`; return; }
-
-            listEl.innerHTML = filtered.map(f => `
-                <div onclick="selectFoodForAdding('${f.id}')" class="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition flex items-center justify-between gap-2">
-                    <div>
-                        <span class="text-xs font-semibold text-white block">${f.name}</span>
-                        <span class="text-[10px] text-slate-400">P:${f.p}g • G:${f.c}g • L:${f.f}g (100g)</span>
-                    </div>
-                    <span class="text-xs font-bold text-cyan-400">${f.kcal} kcal</span>
-                </div>
-            `).join("");
-        }
-
-        function selectFoodForAdding(id) {
-            selectedFoodObj = getAllFoods().find(f => f.id === id);
-            if (!selectedFoodObj) return;
-            document.getElementById("selected-food-panel").classList.remove("hidden");
-            document.getElementById("sel-food-name").textContent = selectedFoodObj.name;
-            document.getElementById("sel-food-base").textContent = `100g : ${selectedFoodObj.kcal} kcal • P:${selectedFoodObj.p}g • G:${selectedFoodObj.c}g • L:${selectedFoodObj.f}g`;
-            document.getElementById("sel-food-grams").value = 100;
-            updateSelectedFoodPreview();
-        }
-
-        function updateSelectedFoodPreview() {
-            if (!selectedFoodObj) return;
-            const r = (parseFloat(document.getElementById("sel-food-grams").value) || 0) / 100;
-            document.getElementById("sel-food-preview").textContent = `${Math.round(selectedFoodObj.kcal * r)} kcal • ${(selectedFoodObj.p * r).toFixed(1)}g P • ${(selectedFoodObj.c * r).toFixed(1)}g G`;
-        }
-
-        function addSelectedFoodToLog() {
-            if (!selectedFoodObj) return;
-            const grams = parseFloat(document.getElementById("sel-food-grams").value);
-            const meal = document.getElementById("sel-food-meal").value;
-            if (!grams || grams <= 0) { showToast("Quantité invalide.", "error"); return; }
-
-            const r = grams / 100;
-            const today = getTodayStr();
-            if (!appState.dailyLogs[today]) appState.dailyLogs[today] = [];
-            appState.dailyLogs[today].push({
-                id: "log_" + Date.now() + Math.random().toString(36).slice(2, 5),
-                name: selectedFoodObj.name, grams: Math.round(grams), meal,
-                kcal: Math.round(selectedFoodObj.kcal * r),
-                p: +(selectedFoodObj.p * r).toFixed(1),
-                c: +(selectedFoodObj.c * r).toFixed(1),
-                f: +(selectedFoodObj.f * r).toFixed(1)
-            });
-            saveState();
-            closeFoodModal();
-            renderJournalView();
-            showToast(`${selectedFoodObj.name} ajouté !`, "success");
-        }
-
-        function removeLogItem(id) {
-            const today = getTodayStr();
-            if (!appState.dailyLogs[today]) return;
-            appState.dailyLogs[today] = appState.dailyLogs[today].filter(i => i.id !== id);
-            saveState();
-            renderJournalView();
-        }
-
-        function clearTodayLog() {
-            showConfirmModal("Vider le journal du jour ?", "Tous les repas enregistrés aujourd'hui seront supprimés.", () => {
-                appState.dailyLogs[getTodayStr()] = [];
-                saveState();
-                renderJournalView();
-                showToast("Journal vidé.", "info");
-            });
-        }
-
-        function renderJournalView() {
-            const today = getTodayStr();
-            document.getElementById("journal-date-label").textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-            document.getElementById("journal-no-profile").classList.toggle("hidden", !!appState.profile);
-
-            const items = appState.dailyLogs[today] || [];
-            const totals = items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, p: a.p + i.p, c: a.c + i.c, f: a.f + i.f }), { kcal: 0, p: 0, c: 0, f: 0 });
-            const t = appState.profile ? appState.profile.calc : { targetKcal: 0, targetProt: 0, targetCarbs: 0, targetFats: 0 };
-
-            updateGauge("kcal", Math.round(totals.kcal), t.targetKcal, "kcal", false);
-            updateGauge("prot", +totals.p.toFixed(1), t.targetProt, "g", true);
-            updateGauge("carbs", +totals.c.toFixed(1), t.targetCarbs, "g", false);
-            updateGauge("fats", +totals.f.toFixed(1), t.targetFats, "g", false);
-
-            const alertBox = document.getElementById("macro-exceed-alert");
-            const alertMsg = document.getElementById("macro-exceed-msg");
-            if (appState.profile && (totals.c > t.targetCarbs || totals.kcal > t.targetKcal)) {
-                alertBox.classList.remove("hidden");
-                alertMsg.textContent = totals.c > t.targetCarbs
-                    ? `Plafond de glucides dépassé (+${(totals.c - t.targetCarbs).toFixed(1)}g) ! Privilégiez protéines pures et légumes.`
-                    : `Objectif calorique dépassé (+${Math.round(totals.kcal - t.targetKcal)} kcal).`;
-            } else {
-                alertBox.classList.add("hidden");
-            }
-
-            const slots = ["Petit-déjeuner", "Déjeuner", "Dîner", "Collation"];
-            document.getElementById("meal-slots-grid").innerHTML = slots.map(slot => {
-                const list = items.filter(i => i.meal === slot);
-                const sKcal = Math.round(list.reduce((s, i) => s + i.kcal, 0));
-                const sP = list.reduce((s, i) => s + i.p, 0).toFixed(1);
-                const sC = list.reduce((s, i) => s + i.c, 0).toFixed(1);
-                return `
-                    <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-slate-800">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                            <div>
-                                <h3 class="text-sm font-bold text-white">${slot}</h3>
-                                <span class="text-[10px] text-slate-400">${sKcal} kcal • P:${sP}g • G:${sC}g</span>
-                            </div>
-                            <button onclick="openFoodModal('${slot}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold">+ Ajouter</button>
-                        </div>
-                        <div class="space-y-1.5">
-                            ${list.length === 0 ? `<p class="text-[11px] text-slate-500 text-center py-3">Aucun aliment</p>` : list.map(i => `
-                                <div class="flex items-center justify-between text-xs bg-slate-950/75 px-3 py-2 rounded-xl border border-slate-800/70">
-                                    <div>
-                                        <span class="font-medium text-slate-200 block">${i.name} (${i.grams}g)</span>
-                                        <span class="text-[10px] text-slate-400">${i.kcal} kcal • P:${i.p}g G:${i.c}g L:${i.f}g</span>
-                                    </div>
-                                    <button onclick="removeLogItem('${i.id}')" class="text-slate-500 hover:text-rose-400 p-1">✕</button>
-                                </div>
-                            `).join("")}
-                        </div>
-                    </div>
-                `;
-            }).join("");
-        }
-
-        function updateGauge(key, cur, target, unit, isMin) {
-            const textEl = document.getElementById(`stat-${key}-text`);
-            const barEl = document.getElementById(`bar-${key}`);
-            const remEl = document.getElementById(`stat-${key}-rem`);
-            const cardEl = document.getElementById(`card-${key}`);
-            if (!target) { textEl.textContent = `${cur} / -- ${unit}`; barEl.style.width = "0%"; remEl.textContent = "Profil requis"; return; }
-
-            textEl.textContent = `${cur} / ${target} ${unit}`;
-            barEl.style.width = `${Math.min(100, Math.round((cur / target) * 100))}%`;
-            const diff = +(target - cur).toFixed(1);
-
-            if (isMin) {
-                if (cur >= target) {
-                    remEl.innerHTML = `<span class="text-emerald-400 font-bold">Objectif atteint ! (+${Math.abs(diff)}${unit})</span>`;
-                    cardEl.classList.add("border-emerald-500/50");
-                } else {
-                    remEl.textContent = `À atteindre : ${diff} ${unit}`;
-                    cardEl.classList.remove("border-emerald-500/50");
-                }
-            } else {
-                if (cur > target) {
-                    remEl.innerHTML = `<span class="text-rose-400 font-bold">Dépassé de ${Math.abs(diff)} ${unit} !</span>`;
-                    barEl.classList.add("bg-rose-500");
-                    cardEl.classList.add("border-rose-500/70");
-                } else {
-                    remEl.textContent = `Marge max : ${diff} ${unit}`;
-                    barEl.classList.remove("bg-rose-500");
-                    cardEl.classList.remove("border-rose-500/70");
-                }
-            }
-        }
-
-        // =========================================================================
-        // 7. PHOTO & MICRO IA (VRAIS APPELS GEMINI 2.5 FLASH)
-        // =========================================================================
-        function handlePlateImageUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            currentPlateMime = file.type || "image/jpeg";
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                currentPlateBase64 = ev.target.result.split(",")[1];
-                const img = document.getElementById("plate-preview-img");
-                img.src = ev.target.result;
-                img.classList.remove("hidden");
-                document.getElementById("plate-upload-placeholder").classList.add("hidden");
-                document.getElementById("btn-analyze-photo").disabled = false;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function analyzePlatePhoto() {
-            if (!getStoredApiKey()) {
-                showToast("Ajoutez d'abord votre clé API Gemini dans l'onglet Profil & API.", "error");
-                goToApiSettings();
-                return;
-            }
-            if (!currentPlateBase64) return;
-
-            const btn = document.getElementById("btn-analyze-photo");
-            const orig = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Analyse Gemini 2.5 Flash en cours...";
-
-            const prompt = `Analyse cette photo de repas. Identifie chaque aliment visible, estime son poids en grammes et calcule ses macronutriments (kcal, protéines p, glucides c, lipides f).
-Réponds UNIQUEMENT en JSON strict (sans texte autour) :
-{
-  "dishTitle": "Nom du plat",
-  "items": [
-    { "name": "Blanc de poulet", "grams": 180, "kcal": 297, "p": 55.8, "c": 0, "f": 6.5 }
-  ]
-}`;
-            try {
-                const raw = await callGeminiFlash({
-                    contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: currentPlateMime, data: currentPlateBase64 } }] }],
-                    generationConfig: { responseMimeType: "application/json" }
-                });
-                displayAiParsedResult(extractJsonFromText(raw));
-                showToast("Assiette analysée par Gemini !", "success");
-            } catch (err) {
-                showToast(`Erreur Gemini : ${err.message}`, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = orig;
-            }
-        }
-
-        // Web Speech API (fr-FR)
+        // Web Speech API (fr-FR) — Mode continu avec conservation du texte dicté
         let recognition = null;
         let isRecording = false;
+        let userWantsRecording = false;
+        let voiceSavedBeforeSession = "";
+        let voiceRestartTimer = null;
+
         if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.lang = "fr-FR";
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = true;
 
             recognition.onstart = () => {
                 isRecording = true;
                 document.getElementById("btn-mic").classList.add("pulse-mic", "bg-rose-500");
                 document.getElementById("btn-mic").classList.remove("bg-emerald-500");
-                document.getElementById("mic-status").textContent = "Écoute en cours... Parlez maintenant";
+                document.getElementById("mic-status").textContent = "Écoute continue... Appuyez sur le micro pour arrêter";
                 document.getElementById("mic-status").classList.add("text-rose-400");
             };
+
             recognition.onresult = (e) => {
-                let t = "";
-                for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
-                document.getElementById("voice-transcript").value = t;
+                let sessionFinal = "";
+                let sessionInterim = "";
+                for (let i = 0; i < e.results.length; i++) {
+                    const chunk = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        sessionFinal += chunk + " ";
+                    } else {
+                        sessionInterim += chunk;
+                    }
+                }
+                const combined = [voiceSavedBeforeSession, sessionFinal.trim(), sessionInterim.trim()]
+                    .filter(Boolean)
+                    .join(" ");
+                document.getElementById("voice-transcript").value = combined;
             };
-            recognition.onerror = () => { isRecording = false; resetMicUI(); };
-            recognition.onend = () => { isRecording = false; resetMicUI(); };
+
+            recognition.onerror = (e) => {
+                // En cas de silence ("no-speech"), on laisse onend relancer l'écoute sans couper
+                if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "audio-capture") {
+                    userWantsRecording = false;
+                    isRecording = false;
+                    resetMicUI();
+                    showToast("Autorisez l'accès au micro dans les paramètres de Chrome.", "error");
+                }
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                // On mémorise tout ce qui a déjà été dicté avant une éventuelle relance
+                voiceSavedBeforeSession = document.getElementById("voice-transcript").value.trim();
+
+                if (userWantsRecording) {
+                    clearTimeout(voiceRestartTimer);
+                    voiceRestartTimer = setTimeout(() => {
+                        if (userWantsRecording) {
+                            try {
+                                recognition.start();
+                            } catch {
+                                userWantsRecording = false;
+                                resetMicUI();
+                            }
+                        }
+                    }, 150);
+                } else {
+                    resetMicUI();
+                }
+            };
         }
 
         function resetMicUI() {
@@ -1570,14 +987,33 @@ Réponds UNIQUEMENT en JSON strict (sans texte autour) :
             st.classList.remove("text-rose-400");
         }
 
+        function clearVoiceTranscript() {
+            document.getElementById("voice-transcript").value = "";
+            voiceSavedBeforeSession = "";
+        }
+
         function toggleVoiceRecognition() {
             if (!recognition) {
                 showToast("Dictée vocale non supportée sur ce navigateur. Tapez votre repas ci-dessous.", "info");
                 document.getElementById("voice-transcript").focus();
                 return;
             }
-            if (isRecording) recognition.stop();
-            else { try { recognition.start(); } catch { showToast("Autorisez le micro dans Chrome.", "info"); } }
+            if (userWantsRecording || isRecording) {
+                userWantsRecording = false;
+                clearTimeout(voiceRestartTimer);
+                try { recognition.stop(); } catch {}
+                resetMicUI();
+            } else {
+                userWantsRecording = true;
+                voiceSavedBeforeSession = document.getElementById("voice-transcript").value.trim();
+                try {
+                    recognition.start();
+                } catch {
+                    userWantsRecording = false;
+                    resetMicUI();
+                    showToast("Autorisez le micro dans Chrome.", "info");
+                }
+            }
         }
 
         async function analyzeVoiceText() {
@@ -1701,34 +1137,291 @@ Réponds UNIQUEMENT en JSON strict :
             return appState.profile ? appState.profile.calc : { targetKcal: 1900, targetProt: 155, targetCarbs: 165, targetFats: 60 };
         }
 
-        function buildLocalFallbackPlan(daysCount, structure, t) {
+        function shuffleList(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function orderRecipes(arr, preferAirfryer) {
+            if (!preferAirfryer) return shuffleList(arr);
+            const prioritized = shuffleList(arr.filter(r => r.airfryer));
+            const others = shuffleList(arr.filter(r => !r.airfryer));
+            return [...prioritized, ...others];
+        }
+
+        function buildLocalFallbackPlan(daysCount, structure, t, preferAirfryer = false) {
             const hasSnack = structure === "3_with_snack";
-            const bList = [
-                { title: "Omelette protéinée & pain complet", prepTime: "10 min", ing: (p, c) => [`${Math.max(2, Math.round(p/7))} œufs + 100g blancs d'œufs`, `${Math.round(c*2.1)}g pain complet`, `5g huile d'olive`], steps: ["Battre les œufs et blancs avec sel, poivre et ciboulette.", "Cuire 3-4 min à la poêle antiadhésive.", "Servir avec le pain complet grillé."] },
-                { title: "Bowl Skyr 0%, fruits rouges & amandes", prepTime: "5 min", ing: (p, c) => [`${Math.round(p*8.5)}g Skyr 0%`, `${Math.round(c*5)}g fruits rouges`, `20g amandes`], steps: ["Verser le Skyr dans un bol.", "Ajouter les fruits rouges et concasser les amandes par-dessus."] }
-            ];
-            const lList = [
-                { title: "Poulet grillé, riz basmati & brocolis", prepTime: "20 min", ing: (p, c) => [`${Math.round(p*3.2)}g blanc de poulet`, `${Math.round(c*3.4)}g riz basmati cuit`, `180g brocolis`, `10g huile d'olive`], steps: ["Cuire le riz 10 min à l'eau bouillante et les brocolis 6 min à la vapeur.", "Griller le poulet assaisonné 5 min par face et arroser d'huile d'olive."] },
-                { title: "Bœuf 5% MG, patate douce rôtie & haricots verts", prepTime: "25 min", ing: (p, c) => [`${Math.round(p*4.5)}g bœuf haché 5%`, `${Math.round(c*4.6)}g patate douce`, `180g haricots verts`, `10g huile d'olive`], steps: ["Rôtir la patate douce en cubes 20 min au four à 200°C.", "Cuire les haricots verts 7 min et saisir le bœuf 3 min par face."] }
-            ];
-            const dList = [
-                { title: "Cabillaud vapeur, épinards & pommes de terre", prepTime: "18 min", ing: (p, c) => [`${Math.round(p*5.2)}g filet de cabillaud`, `${Math.round(c*5.2)}g pommes de terre vapeur`, `200g épinards`, `10g huile d'olive`], steps: ["Cuire les pommes de terre 12 min à la vapeur, ajouter le poisson les 6 dernières minutes.", "Faire tomber les épinards 2 min à l'ail et huile d'olive."] },
-                { title: "Émincé de dinde au curry & courgettes", prepTime: "15 min", ing: (p, c) => [`${Math.round(p*3.4)}g escalope de dinde`, `${Math.round(c*3.3)}g riz basmati cuit`, `200g courgettes`, `8g huile d'olive`], steps: ["Saisir la dinde en lanières avec du curry 5 min.", "Ajouter les courgettes 6 min puis mélanger avec le riz."] }
-            ];
-            const sList = [
-                { title: "Fromage blanc 0%, pomme & amandes", prepTime: "3 min", ing: (p, c) => [`${Math.round(p*11)}g fromage blanc 0%`, `1 pomme (~${Math.round(c*6.5)}g)`, `15g amandes`], steps: ["Couper la pomme en dés dans le fromage blanc et ajouter les amandes."] }
-            ];
+
+            // 9 Petits-déjeuners distincts (dont versions Four / Airfryer)
+            const bList = orderRecipes([
+                {
+                    title: "Omelette protéinée aux fines herbes & pain complet",
+                    prepTime: "10 min",
+                    ing: (p, c) => [`${Math.max(2, Math.round(p / 7.5))} œufs entiers + 100g blancs d'œufs`, `${Math.round(c * 2.1)}g pain complet grillé`, `5g huile d'olive, ciboulette`],
+                    steps: ["Battre les œufs et blancs avec la ciboulette, sel et poivre.", "Cuire 3-4 min à la poêle antiadhésive avec l'huile d'olive.", "Servir avec le pain complet grillé."]
+                },
+                {
+                    title: "Bowl Skyr 0%, fruits rouges & amandes croquantes",
+                    prepTime: "5 min",
+                    ing: (p, c) => [`${Math.round(p * 8.5)}g Skyr nature 0%`, `${Math.round(c * 5)}g fruits rouges (myrtilles, framboises)`, `20g amandes concassées, cannelle`],
+                    steps: ["Verser le Skyr bien frais dans un bol et lisser à la cuillère.", "Ajouter les fruits rouges, la cannelle et les amandes concassées."]
+                },
+                {
+                    title: "Tartines œufs brouillés & avocat citronné",
+                    prepTime: "10 min",
+                    ing: (p, c) => [`${Math.max(2, Math.round(p / 8))} œufs + 80g blanc de dinde`, `${Math.round(c * 2.1)}g pain complet`, `50g avocat écrasé au citron`],
+                    steps: ["Toaster le pain complet et tartiner l'avocat citronné.", "Brouiller les œufs à feu doux 3 min en remuant.", "Déposer la dinde et les œufs brouillés sur les tartines."]
+                },
+                {
+                    title: "Muffins salés œufs, épinards & dinde (Four / Airfryer)",
+                    prepTime: "15 min", airfryer: true,
+                    ing: (p, c) => [`${Math.max(2, Math.round(p / 8))} œufs + 100g blancs d'œufs + 60g dés de dinde`, `60g épinards frais hachés`, `${Math.round(c * 2)}g pain complet en accompagnement`],
+                    steps: ["Battre les œufs et blancs avec les épinards hachés, les dés de dinde, sel et poivre.", "Répartir dans des moules en silicone et cuire 12 min à 175°C à l'Airfryer (ou 16 min au four à 185°C).", "Déguster chaud avec le pain complet."]
+                },
+                {
+                    title: "Pomme rôtie cannelle à l'Airfryer, Skyr 0% & amandes",
+                    prepTime: "12 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 8.5)}g Skyr nature 0%`, `${Math.round(c * 6)}g pomme en quartiers`, `15g amandes effilées, 1 c.à.c cannelle`],
+                    steps: ["Mélanger les quartiers de pomme avec la cannelle et cuire 10 min à 180°C à l'Airfryer (ou 15 min au four).", "Déposer les pommes tièdes sur le Skyr 0% bien frais et parsemer d'amandes."]
+                },
+                {
+                    title: "Pancakes protéinés express à la banane",
+                    prepTime: "12 min",
+                    ing: (p, c) => [`2 œufs + ${Math.round(p * 1.1)}g Whey ou fromage blanc`, `${Math.round(c * 3.8)}g banane écrasée`, `1 c.à.c levure, cannelle`],
+                    steps: ["Écraser la banane et mélanger avec les œufs et la base protéinée.", "Cuire en petits pancakes 2 min par face dans une poêle chaude."]
+                },
+                {
+                    title: "Œufs cocotte aux tomates cerises (Four / Airfryer) & pain complet",
+                    prepTime: "14 min", airfryer: true,
+                    ing: (p, c) => [`${Math.max(2, Math.round(p / 7.5))} œufs + 80g blancs d'œufs`, `100g tomates cerises, herbes de Provence`, `${Math.round(c * 2.1)}g pain complet`],
+                    steps: ["Déposer les tomates cerises coupées au fond d'un ramequin, casser les œufs par-dessus et assaisonner.", "Cuire 10 à 12 min à 170°C à l'Airfryer (ou 15 min au four à 180°C) jusqu'à ce que le blanc soit pris.", "Servir avec le pain complet grillé."]
+                },
+                {
+                    title: "Fromage blanc 0%, dés de pomme, cannelle & noix",
+                    prepTime: "5 min",
+                    ing: (p, c) => [`${Math.round(p * 10)}g fromage blanc 0%`, `${Math.round(c * 6)}g pomme en dés`, `18g noix ou amandes, cannelle`],
+                    steps: ["Couper la pomme en petits dés et les mélanger au fromage blanc.", "Parsemer de cannelle et de noix concassées."]
+                },
+                {
+                    title: "Assiette salée : œufs mollets, blanc de dinde & pain complet",
+                    prepTime: "8 min",
+                    ing: (p, c) => [`2 œufs mollets + ${Math.round(p * 2.5)}g tranches de blanc de dinde`, `${Math.round(c * 2)}g pain complet`, `100g tomates cerises`],
+                    steps: ["Plonger les œufs 6 min dans l'eau bouillante puis refroidir.", "Dresser avec les tranches de dinde, le pain complet et les tomates cerises."]
+                }
+            ], preferAirfryer);
+
+            // 14 Déjeuners distincts (dont 8 recettes Four / Airfryer)
+            const lList = orderRecipes([
+                {
+                    title: "Aiguillettes de poulet croustillantes aux épices (Airfryer) & frites de patate douce",
+                    prepTime: "20 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en aiguillettes`, `${Math.round(c * 4.6)}g patate douce en bâtonnets`, `180g brocolis`, `10g huile d'olive, paprika fumé, ail en poudre, thym`],
+                    steps: ["Enrober les bâtonnets de patate douce avec la moitié de l'huile et le paprika, lancer 15 min à 195°C à l'Airfryer (ou 25 min au four à 205°C) en secouant à mi-cuisson.", "Badigeonner le poulet du reste d'huile et d'épices puis cuire 11 min à 190°C à l'Airfryer.", "Servir avec les brocolis cuits vapeur ou rôtis 5 min en fin de cuisson."]
+                },
+                {
+                    title: "Pavé de saumon laqué citron-gingembre à l'Airfryer & brocolis rôtis",
+                    prepTime: "16 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.6)}g pavé de saumon frais`, `${Math.round(c * 3.4)}g riz basmati cuit`, `200g fleurettes de brocoli`, `5g huile d'olive, jus de citron, gingembre râpé, 1 c.à.c sauce soja`],
+                    steps: ["Mélanger citron, gingembre et sauce soja, puis badigeonner le pavé de saumon.", "Cuire le saumon et les brocolis huilés ensemble 10 à 12 min à 185°C à l'Airfryer (ou 15 min au four à 190°C).", "Dresser sur le riz basmati chaud."]
+                },
+                {
+                    title: "Boulettes de dinde aux herbes au four, pommes de terre grenailles & haricots verts",
+                    prepTime: "25 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.4)}g dinde hachée`, `${Math.round(c * 5.2)}g pommes de terre grenailles coupées en deux`, `180g haricots verts`, `10g huile d'olive, persil, ail, origan`],
+                    steps: ["Façonner des boulettes avec la dinde hachée, l'ail, le persil et l'origan.", "Disposer les boulettes et les grenailles huilées sur une plaque au four 20 min à 200°C (ou 14 min à 190°C à l'Airfryer).", "Accompagner de haricots verts vapeur."]
+                },
+                {
+                    title: "Brochettes de poulet citron-origan à l'Airfryer, quinoa & poivrons rôtis",
+                    prepTime: "18 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g dés de blanc de poulet`, `${Math.round(c * 4.5)}g quinoa cuit`, `180g poivrons rouges et verts en morceaux`, `10g huile d'olive, citron, origan`],
+                    steps: ["Enfiler le poulet et les morceaux de poivrons en alternance sur des pics, badigeonner d'huile, citron et origan.", "Cuire 12 min à 195°C à l'Airfryer (ou 16 min au four à 200°C) en retournant à mi-cuisson.", "Servir avec le quinoa cuit."]
+                },
+                {
+                    title: "Courgettes farcies au bœuf 5% MG & herbes rôties au four",
+                    prepTime: "28 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.5)}g bœuf haché 5% MG`, `2 courgettes moyennes évidées`, `${Math.round(c * 3.4)}g riz basmati cuit`, `100g coulis de tomate, 8g huile d'olive, thym`],
+                    steps: ["Couper les courgettes en deux dans la longueur, les évider et mélanger la chair avec le bœuf 5%, le coulis de tomate et le thym.", "Garnir les courgettes et enfourner 22 min à 195°C (ou 16 min à 185°C à l'Airfryer).", "Servir avec le riz basmati cuit."]
+                },
+                {
+                    title: "Filet de cabillaud en croûte d'herbes au four & pommes de terre rôties",
+                    prepTime: "22 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 5.2)}g filet de cabillaud`, `${Math.round(c * 5.2)}g pommes de terre en dés`, `180g courgettes en rondelles`, `10g huile d'olive, persil, ciboulette, zeste de citron`],
+                    steps: ["Rôtir les dés de pommes de terre et courgettes avec la moitié de l'huile 15 min à 200°C au four (ou 12 min à l'Airfryer).", "Ajouter le cabillaud recouvert d'herbes hachées et zeste de citron pour 8 à 10 min supplémentaires."]
+                },
+                {
+                    title: "Filet mignon de porc maigre rôti au four à la moutarde & haricots verts",
+                    prepTime: "28 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.4)}g filet mignon de porc dégraissé`, `${Math.round(c * 4.6)}g patate douce rôtie`, `180g haricots verts`, `1 c.à.c moutarde à l'ancienne, 8g huile d'olive, romarin`],
+                    steps: ["Badigeonner le filet mignon de moutarde et romarin, enfourner avec les cubes de patate douce 22 min à 195°C (ou 16 min à 185°C à l'Airfryer).", "Laisser reposer 3 min, trancher en médaillons et servir avec les haricots verts."]
+                },
+                {
+                    title: "Bœuf haché 5% MG façon bouchère, patate douce rôtie au four & haricots verts",
+                    prepTime: "25 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.5)}g steak haché 5% MG`, `${Math.round(c * 4.6)}g patate douce en cubes`, `180g haricots verts`, `10g huile d'olive, paprika`],
+                    steps: ["Rôtir la patate douce au four 20 min à 200°C (ou 15 min à 190°C à l'Airfryer) avec le paprika et la moitié de l'huile.", "Cuire les haricots verts 7 min et saisir le bœuf 3 min par face."]
+                },
+                {
+                    title: "Suprême de poulet grillé au citron, riz basmati & brocolis",
+                    prepTime: "20 min",
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet`, `${Math.round(c * 3.4)}g riz basmati cuit`, `180g brocolis vapeur`, `10g huile d'olive, citron, thym`],
+                    steps: ["Cuire le riz 10 min à l'eau bouillante et les brocolis 6 min à la vapeur.", "Saisir le poulet assaisonné 5 min par face et arroser d'huile d'olive et citron."]
+                },
+                {
+                    title: "Salade fraîcheur au thon, pâtes complètes, tomates & avocat",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.round(p * 3.7)}g thon au naturel égoutté`, `${Math.round(c * 3.8)}g pâtes complètes cuites`, `150g tomates, 50g avocat, concombre`, `5g huile d'olive, vinaigre balsamique`],
+                    steps: ["Cuire les pâtes complètes al dente puis les passer sous l'eau froide.", "Mélanger dans un saladier avec le thon émietté, les tomates, l'avocat et l'assaisonnement."]
+                },
+                {
+                    title: "Filet de dinde mariné au paprika, pommes de terre & poivrons",
+                    prepTime: "22 min",
+                    ing: (p, c) => [`${Math.round(p * 3.4)}g escalope de dinde`, `${Math.round(c * 5.2)}g pommes de terre vapeur`, `180g poivrons émincés`, `10g huile d'olive, paprika fumé, ail`],
+                    steps: ["Cuire les pommes de terre en quartiers 12 min à la vapeur.", "Faire revenir les poivrons 6 min puis saisir la dinde marinée au paprika 5 min."]
+                },
+                {
+                    title: "Wok de crevettes à l'ail & gingembre, riz basmati & légumes verts",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.round(p * 4.5)}g crevettes décortiquées`, `${Math.round(c * 3.4)}g riz basmati cuit`, `200g mélange courgettes/haricots verts`, `10g huile d'olive, ail, gingembre, sauce soja`],
+                    steps: ["Faire sauter les légumes dans un wok chaud avec l'huile, l'ail et le gingembre 6 min.", "Ajouter les crevettes 3 min, déglacer d'un filet de sauce soja et servir avec le riz."]
+                },
+                {
+                    title: "Bowl protéiné au poulet effiloché, lentilles vertes & tomates",
+                    prepTime: "18 min",
+                    ing: (p, c) => [`${Math.round(p * 3)}g blanc de poulet`, `${Math.round(c * 4.5)}g lentilles vertes cuites`, `150g tomates et épinards frais`, `10g huile d'olive, cumin`],
+                    steps: ["Griller le poulet au cumin puis l'effilocher ou le couper en dés.", "Réchauffer les lentilles et dresser dans un bol avec les épinards, tomates et l'huile d'olive."]
+                },
+                {
+                    title: "Pavé de saumon rôti à l'aneth, quinoa & courgettes poêlées",
+                    prepTime: "20 min",
+                    ing: (p, c) => [`${Math.round(p * 4.6)}g pavé de saumon`, `${Math.round(c * 4.5)}g quinoa cuit`, `200g courgettes en rondelles`, `5g huile d'olive, aneth`],
+                    steps: ["Cuire le quinoa rincé 12 min dans l'eau frémissante.", "Poêler les courgettes 6 min et cuire le saumon 4 min côté peau puis 3 min côté chair."]
+                }
+            ], preferAirfryer);
+
+            // 14 Dîners distincts (dont 8 recettes Four / Airfryer)
+            const dList = orderRecipes([
+                {
+                    title: "Tenders de poulet healthy au curry (Airfryer) & légumes du soleil rôtis",
+                    prepTime: "18 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g lanières de blanc de poulet`, `${Math.round(c * 3.3)}g riz basmati cuit`, `200g courgettes et tomates cerises`, `8g huile d'olive, curry doux, curcuma, ail`],
+                    steps: ["Mélanger le poulet avec l'huile, le curry et le curcuma, puis cuire 11 min à 190°C à l'Airfryer (ou 16 min au four à 200°C).", "Ajouter les légumes coupés 7 min avant la fin pour qu'ils rôtissent.", "Servir avec le riz basmati chaud."]
+                },
+                {
+                    title: "Dos de colin en papillote au citron (Four / Airfryer), quinoa & ratatouille",
+                    prepTime: "20 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 5.2)}g dos de colin`, `${Math.round(c * 4.4)}g quinoa cuit`, `200g ratatouille (courgette, aubergine, tomate)`, `8g huile d'olive, citron, herbes`],
+                    steps: ["Enfermer le colin en papillote avec citron, herbes et filet d'huile, cuire 14 min à 185°C à l'Airfryer (ou 16 min au four à 190°C).", "Servir avec le quinoa cuit et la ratatouille chaude."]
+                },
+                {
+                    title: "Crevettes rôties ail-persil à l'Airfryer, patate douce & courgettes",
+                    prepTime: "16 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.5)}g crevettes décortiquées`, `${Math.round(c * 4.5)}g cubes de patate douce`, `180g courgettes en bâtonnets`, `8g huile d'olive, ail haché, persil, citron`],
+                    steps: ["Cuire la patate douce et les courgettes 12 min à 195°C à l'Airfryer (ou 18 min au four).", "Ajouter les crevettes marinées à l'ail, persil et citron pour les 4 dernières minutes."]
+                },
+                {
+                    title: "Poivrons farcis à la dinde hachée & riz complet au four",
+                    prepTime: "28 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.4)}g dinde hachée`, `2 demi-poivrons épépinés`, `${Math.round(c * 3.3)}g riz complet cuit`, `80g concassé de tomates, 8g huile d'olive, origan`],
+                    steps: ["Mélanger la dinde hachée avec le riz, le concassé de tomates et l'origan.", "Garnir les demi-poivrons et cuire 22 min à 195°C au four (ou 16 min à 185°C à l'Airfryer)."]
+                },
+                {
+                    title: "Pavé de truite au four au romarin, légumes rôtis & riz complet",
+                    prepTime: "20 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 4.6)}g pavé de truite ou saumon`, `${Math.round(c * 3.4)}g riz complet cuit`, `200g courgettes et tomates rôties`, `5g huile d'olive, romarin`],
+                    steps: ["Enfourner le poisson et les légumes assaisonnés au romarin 15 min à 190°C au four (ou 11 min à 185°C à l'Airfryer).", "Servir avec le riz complet chaud."]
+                },
+                {
+                    title: "Aubergine rôtie au four, effiloché de thon & sauce yaourt-citron",
+                    prepTime: "24 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 3.7)}g thon au naturel égoutté`, `1 belle aubergine coupée en deux et quadrillée`, `${Math.round(c * 4.4)}g quinoa cuit`, `60g fromage blanc 0%, citron, ciboulette, 8g huile d'olive`],
+                    steps: ["Badigeonner l'aubergine quadrillée d'huile d'olive et rôtir 20 min à 200°C au four (ou 15 min à 190°C à l'Airfryer).", "Garnir la chair fondante avec le thon émietté, le quinoa et la sauce fromage blanc-citron-ciboulette."]
+                },
+                {
+                    title: "Filet de lieu noir à l'Airfryer, chips de légumes & pommes de terre vapeur",
+                    prepTime: "16 min", airfryer: true,
+                    ing: (p, c) => [`${Math.round(p * 5.2)}g filet de lieu noir ou cabillaud`, `${Math.round(c * 5.2)}g pommes de terre vapeur`, `180g carottes et courgettes en fines lamelles`, `8g huile d'olive, paprika, citron`],
+                    steps: ["Faire rôtir les lamelles de légumes 10 min à 190°C à l'Airfryer avec un filet d'huile et paprika.", "Déposer le filet de poisson citronné dans le panier et cuire 8 min à 180°C, servir avec les pommes de terre."]
+                },
+                {
+                    title: "Gratin express d'œufs, brocolis & blanc de dinde au four / Airfryer",
+                    prepTime: "18 min", airfryer: true,
+                    ing: (p, c) => [`${Math.max(3, Math.round(p / 8))} œufs + 80g dés de blanc de dinde`, `200g fleurettes de brocolis précuits`, `${Math.round(c * 4.5)}g patate douce cuite`, `60g fromage blanc 0%, muscade, poivre`],
+                    steps: ["Mélanger les œufs battus avec le fromage blanc, la muscade, les brocolis et la dinde dans un petit plat.", "Cuire 15 min à 180°C à l'Airfryer (ou 20 min au four) jusqu'à ce que le dessus soit doré, servir avec la patate douce."]
+                },
+                {
+                    title: "Filet de cabillaud vapeur, fondue d'épinards & pommes de terre",
+                    prepTime: "18 min",
+                    ing: (p, c) => [`${Math.round(p * 5.2)}g filet de cabillaud`, `${Math.round(c * 5.2)}g pommes de terre vapeur`, `200g épinards frais`, `10g huile d'olive, ail, persil`],
+                    steps: ["Cuire les pommes de terre 12 min à la vapeur, ajouter le cabillaud les 6 dernières minutes.", "Faire tomber les épinards 2 min à la poêle avec l'ail et l'huile d'olive."]
+                },
+                {
+                    title: "Émincé de dinde au curry doux, courgettes sautées & riz basmati",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.round(p * 3.4)}g escalope de dinde`, `${Math.round(c * 3.3)}g riz basmati cuit`, `200g courgettes en dés`, `8g huile d'olive, curry doux`],
+                    steps: ["Saisir la dinde en lanières avec le curry 5 min.", "Ajouter les courgettes 6 min puis incorporer le riz basmati cuit."]
+                },
+                {
+                    title: "Omelette baveuse aux champignons, patate douce & salade verte",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.max(3, Math.round(p / 7.5))} œufs + 100g blancs d'œufs`, `${Math.round(c * 4.5)}g patate douce vapeur`, `150g champignons de Paris, salade`, `5g huile d'olive`],
+                    steps: ["Faire revenir les champignons émincés 5 min à la poêle.", "Verser les œufs battus, cuire 3 min et accompagner de patate douce et salade."]
+                },
+                {
+                    title: "Escalope de poulet aux herbes de Provence, pâtes complètes & haricots",
+                    prepTime: "18 min",
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet`, `${Math.round(c * 3.8)}g pâtes complètes cuites`, `180g haricots verts`, `8g huile d'olive, herbes de Provence`],
+                    steps: ["Cuire les pâtes complètes et les haricots verts.", "Griller le poulet aux herbes de Provence 5 min par face et dresser avec l'huile d'olive."]
+                },
+                {
+                    title: "Steak haché 5% MG grillé, poêlée de brocolis à l'ail & lentilles",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.round(p * 4.5)}g bœuf haché 5% MG`, `${Math.round(c * 4.5)}g lentilles cuites`, `180g brocolis`, `8g huile d'olive, ail haché`],
+                    steps: ["Blanchir les brocolis 5 min puis les poêler 2 min avec l'ail et l'huile.", "Griller le steak 3 min par face et servir avec les lentilles chaudes."]
+                },
+                {
+                    title: "Salade tiède de poulet rôti, haricots verts, tomates & pain complet",
+                    prepTime: "15 min",
+                    ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en dés`, `${Math.round(c * 2.1)}g pain complet`, `180g haricots verts et tomates cerises`, `8g huile d'olive, moutarde, citron`],
+                    steps: ["Saisir les dés de poulet 6 min puis les déposer sur les haricots verts tièdes et tomates.", "Assaisonner d'une vinaigrette légère moutarde-citron et servir avec le pain complet."]
+                }
+            ], preferAirfryer);
+
+            // 9 Collations distinctes (dont versions Four / Airfryer)
+            const sList = orderRecipes([
+                { title: "Fromage blanc 0%, pomme croquante & amandes", prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 11)}g fromage blanc 0%`, `1 pomme (~${Math.round(c * 6.5)}g)`, `15g amandes`], steps: ["Couper la pomme en dés dans le fromage blanc et ajouter les amandes."] },
+                { title: "Chips de pomme à la cannelle (Airfryer) & Skyr 0%", prepTime: "10 min", airfryer: true, ing: (p, c) => [`${Math.round(p * 9.5)}g Skyr 0%`, `${Math.round(c * 6.5)}g pomme tranchée finement`, `Cannelle, 12g amandes`], steps: ["Disposer les fines tranches de pomme saupoudrées de cannelle 8 min à 160°C à l'Airfryer (ou 15 min au four).", "Déguster croustillant avec le Skyr 0% et les amandes."] },
+                { title: "Muffin protéiné banane-cacao express (Four / Airfryer)", prepTime: "12 min", airfryer: true, ing: (p, c) => [`1 œuf + ${Math.round(p * 0.9)}g Whey ou Skyr`, `${Math.round(c * 4)}g banane écrasée`, `1 c.à.c cacao pur, pincée de levure`], steps: ["Mélanger tous les ingrédients dans un ramequin ou moule silicone.", "Cuire 10 min à 175°C à l'Airfryer (ou 14 min au four à 180°C)."] },
+                { title: "Shaker Whey Isolate & banane", prepTime: "2 min", ing: (p, c) => [`${Math.round(p * 1.15)}g Whey Isolate + 250ml eau`, `${Math.round(c * 4.2)}g banane`], steps: ["Mélanger la Whey dans le shaker avec de l'eau fraîche et déguster avec la banane."] },
+                { title: "Skyr nature 0%, myrtilles & cannelle", prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 9.5)}g Skyr 0%`, `${Math.round(c * 6)}g myrtilles`, `10g amandes, cannelle`], steps: ["Verser le Skyr dans un bol avec les myrtilles, la cannelle et les amandes."] },
+                { title: "Collation salée : œufs durs & pain complet", prepTime: "3 min", ing: (p, c) => [`${Math.max(2, Math.round(p / 7))} œufs durs`, `${Math.round(c * 2.2)}g pain complet`, `Quelques tomates cerises`], steps: ["Écaler les œufs durs préparés à l'avance et consommer avec le pain complet et les tomates."] },
+                { title: "Roulés de blanc de dinde, concombre & amandes", prepTime: "4 min", ing: (p, c) => [`${Math.round(p * 3.5)}g tranches de blanc de dinde`, `100g bâtonnets de concombre + 1 fruit`, `15g amandes`], steps: ["Enrouler les bâtonnets de concombre dans les tranches de dinde et accompagner des amandes."] },
+                { title: "Mousse Skyr 0% cacao & rondelles de banane", prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 9.5)}g Skyr 0%`, `1 c.à.c cacao pur non sucré`, `${Math.round(c * 4)}g banane`], steps: ["Fouetter le Skyr avec le cacao pur et garnir de rondelles de banane."] },
+                { title: "Fromage blanc 0%, fruits rouges & noix", prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 11)}g fromage blanc 0%`, `${Math.round(c * 6)}g fruits rouges`, `15g cerneaux de noix`], steps: ["Mélanger les fruits rouges au fromage blanc 0% et parsemer de noix."] }
+            ], preferAirfryer);
 
             const days = [];
             for (let d = 1; d <= daysCount; d++) {
                 const slots = hasSnack
-                    ? [{ slot: "Petit-déjeuner", tpl: bList[(d-1)%bList.length], f: 0.24 }, { slot: "Déjeuner", tpl: lList[(d-1)%lList.length], f: 0.35 }, { slot: "Collation", tpl: sList[0], f: 0.13 }, { slot: "Dîner", tpl: dList[(d-1)%dList.length], f: 0.28 }]
-                    : [{ slot: "Petit-déjeuner", tpl: bList[(d-1)%bList.length], f: 0.27 }, { slot: "Déjeuner", tpl: lList[(d-1)%lList.length], f: 0.40 }, { slot: "Dîner", tpl: dList[(d-1)%dList.length], f: 0.33 }];
+                    ? [
+                        { slot: "Petit-déjeuner", tpl: bList[(d - 1) % bList.length], f: 0.24 },
+                        { slot: "Déjeuner", tpl: lList[(d - 1) % lList.length], f: 0.35 },
+                        { slot: "Collation", tpl: sList[(d - 1) % sList.length], f: 0.13 },
+                        { slot: "Dîner", tpl: dList[(d - 1) % dList.length], f: 0.28 }
+                    ]
+                    : [
+                        { slot: "Petit-déjeuner", tpl: bList[(d - 1) % bList.length], f: 0.27 },
+                        { slot: "Déjeuner", tpl: lList[(d - 1) % lList.length], f: 0.40 },
+                        { slot: "Dîner", tpl: dList[(d - 1) % dList.length], f: 0.33 }
+                    ];
 
                 let tk = 0, tp = 0, tc = 0, tf = 0;
                 const meals = slots.map(s => {
                     const p = Math.round(t.targetProt * s.f), c = Math.round(t.targetCarbs * s.f), f = Math.round(t.targetFats * s.f);
-                    const k = Math.round(p*4 + c*4 + f*9);
+                    const k = Math.round(p * 4 + c * 4 + f * 9);
                     tk += k; tp += p; tc += c; tf += f;
                     return { slot: s.slot, title: s.tpl.title, prepTime: s.tpl.prepTime, kcal: k, p, c, f, ingredients: s.tpl.ing(p, c), steps: s.tpl.steps };
                 });
@@ -1741,6 +1434,7 @@ Réponds UNIQUEMENT en JSON strict :
             const daysCount = parseInt(document.getElementById("plan-days-count").value) || 3;
             const structure = document.getElementById("plan-meal-structure").value;
             const prefs = document.getElementById("plan-prefs").value.trim();
+            const preferAirfryer = document.getElementById("plan-prefer-airfryer").checked;
             const t = getPlanTargets();
             const hasSnack = structure === "3_with_snack";
 
@@ -1751,7 +1445,16 @@ Réponds UNIQUEMENT en JSON strict :
 
             let days = null;
             if (getStoredApiKey() && daysCount <= 7) {
-                const prompt = `Génère un planning alimentaire français de ${daysCount} jour(s) avec ${hasSnack ? "4 repas/jour (Petit-déjeuner, Déjeuner, Collation, Dîner)" : "3 repas/jour (Petit-déjeuner, Déjeuner, Dîner)"}.
+                const cookingInstruction = preferAirfryer
+                    ? "- MODE DE CUISSON IMPÉRATIF : privilégie des recettes healthy cuites à l'Airfryer ou au four (avec températures et temps précis en °C et minutes, peu d'huile)."
+                    : "- Intègre régulièrement des recettes healthy cuites au four ou à l'Airfryer (avec températures et temps précis) en plus des cuissons vapeur/poêle.";
+
+                const prompt = `Génère un planning alimentaire français TRÈS DIVERSIFIÉ de ${daysCount} jour(s) avec ${hasSnack ? "4 repas/jour (Petit-déjeuner, Déjeuner, Collation, Dîner)" : "3 repas/jour (Petit-déjeuner, Déjeuner, Dîner)"}.
+RÈGLE DE VARIÉTÉ STRICTE :
+- ZÉRO répétition de plat sur l'ensemble des ${daysCount} jours : chaque petit-déjeuner, chaque déjeuner, chaque dîner et chaque collation doit être une recette différente.
+- Varie les sources de protéines au fil de la semaine (poulet, dinde, bœuf 5% MG, filet mignon maigre, saumon/truite, cabillaud/colin/lieu noir, thon, crevettes, œufs, Skyr, fromage blanc) ainsi que les féculents (riz basmati, patate douce, quinoa, pommes de terre, pâtes complètes, pain complet, lentilles) et les légumes.
+- Ne propose pas la même source de protéine au déjeuner et au dîner d'un même jour.
+${cookingInstruction}
 Objectifs/jour : ~${t.targetKcal} kcal, Protéines >= ${t.targetProt}g, Glucides <= ${t.targetCarbs}g, Lipides ~${t.targetFats}g. ${prefs ? "Préférences : " + prefs : ""}
 Réponds UNIQUEMENT en JSON strict :
 {
@@ -1776,7 +1479,7 @@ Réponds UNIQUEMENT en JSON strict :
                 }
             }
 
-            if (!days) days = buildLocalFallbackPlan(daysCount, structure, t);
+            if (!days) days = buildLocalFallbackPlan(daysCount, structure, t, preferAirfryer);
 
             appState.mealPlan = { daysCount, structure, targets: t, createdAt: new Date().toLocaleDateString("fr-FR"), days, checklist: {} };
             saveState();
