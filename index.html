@@ -485,15 +485,16 @@
 
                 <div class="p-4 overflow-y-auto space-y-3.5 flex-1">
                     <div class="flex flex-wrap gap-2">
-                        <input type="text" id="food-search" oninput="renderFoodLibrary()" placeholder="Rechercher (poulet, riz, œuf, skyr...)" class="flex-1 min-w-[160px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="food-search" oninput="renderFoodLibrary()" placeholder="Rechercher (wrap, poulet, courgette, sauce, skyr...)" class="flex-1 min-w-[160px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
                         <select id="food-category" onchange="renderFoodLibrary()" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200">
                             <option value="all">Toutes catégories</option>
-                            <option value="Protéines">Viandes, Poissons & Œufs</option>
-                            <option value="Laitiers">Laitiers & Whey</option>
-                            <option value="Féculents">Féculents</option>
+                            <option value="Protéines">Viandes, Poissons, Œufs & Végé</option>
+                            <option value="Laitiers">Laitiers, Fromages & Whey</option>
+                            <option value="Féculents">Féculents, Wraps & Pains</option>
                             <option value="Légumes">Légumes</option>
                             <option value="Fruits">Fruits</option>
-                            <option value="Lipides">Lipides</option>
+                            <option value="Lipides">Lipides & Oléagineux</option>
+                            <option value="Sauces & Plaisirs">Sauces Healthy, Condiments & Extras</option>
                             <option value="Perso">Mes Aliments Perso</option>
                         </select>
                         <button onclick="toggleCustomFoodForm()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-semibold">+ Perso</button>
@@ -690,8 +691,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Préférences / Exclusions</label>
-                        <input type="text" id="plan-prefs" placeholder="Ex: sans porc, rapide, poisson..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600">
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Précisions libres (optionnel)</label>
+                        <input type="text" id="plan-prefs" placeholder="Ex: plat rapide le midi, plus de poisson..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600">
                     </div>
                     <div class="flex items-end">
                         <button id="btn-generate-plan" onclick="generateMultiDayPlan()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-xs shadow-lg transition">
@@ -700,11 +701,27 @@
                     </div>
                 </div>
 
-                <!-- Option Four & Airfryer -->
-                <label class="flex items-center gap-2.5 cursor-pointer select-none pt-1">
-                    <input type="checkbox" id="plan-airfryer-oven" checked class="w-4 h-4 rounded accent-emerald-500">
-                    <span class="text-xs text-slate-200 font-medium">🔥 Prioriser les recettes healthy au <strong class="text-emerald-400">Four</strong> et à l'<strong class="text-cyan-400">Airfryer</strong></span>
-                </label>
+                <!-- Choix des envies & styles de plats -->
+                <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-emerald-400">🍽️ Mes envies & styles de repas</span>
+                        <span id="plan-styles-count" class="text-[10px] text-slate-400">0 sélectionné(s)</span>
+                    </div>
+                    <div id="plan-styles-chips" class="flex flex-wrap gap-1.5"></div>
+                </div>
+
+                <!-- Liste complète des exclusions (Ce que je ne veux pas) -->
+                <div class="p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/25 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <button type="button" onclick="toggleExclusionsPanel()" class="flex items-center gap-2 text-xs font-bold text-rose-400 hover:text-rose-300 transition">
+                            <span>🚫 Ce que je NE veux PAS (Aliments exclus)</span>
+                            <span id="plan-exclusions-count" class="px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-[10px] text-rose-300">0 exclu(s)</span>
+                            <span id="exclusions-chevron" class="text-[10px] text-slate-400">▼</span>
+                        </button>
+                        <button type="button" onclick="clearAllExclusions()" class="text-[11px] text-slate-400 hover:text-rose-300 underline">Tout réinitialiser</button>
+                    </div>
+                    <div id="plan-exclusions-container" class="space-y-3 pt-1"></div>
+                </div>
 
                 <div id="plan-actions-bar" class="hidden pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
                     <button onclick="togglePrintPreviewMode()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition">
@@ -881,11 +898,17 @@
 
     <script>
         // =========================================================================
-        // 1. GESTION DE LA CLÉ API GEMINI 3.8 FLASH (LOCALSTORAGE)
+        // 1. GESTION DE LA CLÉ API GEMINI (RETRIES + BASCULE AUTO EN CAS DE PIC)
         // =========================================================================
         const API_KEY_STORAGE = "nutricalibre_gemini_api_key";
         const STATE_STORAGE = "nutricalibre_app_state_v1";
-        const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+        const GEMINI_MODELS = [
+            "gemini-3.8-flash",
+            "gemini-3.8-flash-lite",
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash-lite"
+        ];
         let activeGeminiModel = GEMINI_MODELS[0];
 
         function getStoredApiKey() {
@@ -963,27 +986,54 @@
             const key = getStoredApiKey();
             if (!key) throw new Error("NO_API_KEY");
 
-            let lastErr = new Error("Impossible de joindre l'API Gemini.");
+            let lastErr = new Error("Serveurs Gemini temporairement saturés. Réessayez dans quelques secondes.");
             for (const model of GEMINI_MODELS) {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok) {
-                    activeGeminiModel = model;
-                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!text) throw new Error("Réponse vide de l'IA.");
-                    return text;
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+                        const res = await fetch(url, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (res.ok) {
+                            activeGeminiModel = model;
+                            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (!text) throw new Error("Réponse vide de l'IA.");
+                            return text;
+                        }
+                        const errMsg = data?.error?.message || `HTTP ${res.status}`;
+                        lastErr = new Error(errMsg);
+
+                        // Clé invalide -> arrêt immédiat
+                        if (res.status === 400 || res.status === 401 || res.status === 403 || /API_KEY_INVALID|API key not valid/i.test(errMsg)) {
+                            throw lastErr;
+                        }
+
+                        // Modèle indisponible / non trouvé -> passer directement au modèle suivant
+                        if (res.status === 404 || /no longer available|not found/i.test(errMsg)) {
+                            break;
+                        }
+
+                        // Forte demande / surcharge temporaire (503, 429, 500, 502, 504) -> petite pause puis retry / bascule modèle suivant
+                        if ([429, 500, 502, 503, 504].includes(res.status) || /high demand|overloaded|unavailable|try again|rate limit|resource exhausted/i.test(errMsg)) {
+                            if (attempt === 0) {
+                                await new Promise(r => setTimeout(r, 900));
+                                continue;
+                            }
+                            break;
+                        }
+                        throw lastErr;
+                    } catch (err) {
+                        if (err === lastErr && /API_KEY_INVALID|API key not valid/i.test(err.message)) throw err;
+                        lastErr = err;
+                        if (attempt === 0) {
+                            await new Promise(r => setTimeout(r, 700));
+                            continue;
+                        }
+                    }
                 }
-                const errMsg = data?.error?.message || `HTTP ${res.status}`;
-                lastErr = new Error(errMsg);
-                if (res.status === 404 || /no longer available|not found/i.test(errMsg)) {
-                    continue;
-                }
-                throw lastErr;
             }
             throw lastErr;
         }
@@ -1024,42 +1074,133 @@
         }
 
         // =========================================================================
-        // 2. BASE D'ALIMENTS FRANÇAISE (VALEURS POUR 100g)
+        // 2. BASE D'ALIMENTS FRANÇAISE COMPLÈTE (VALEURS POUR 100g)
         // =========================================================================
         const DEFAULT_FOODS = [
+            // --- PROTÉINES (Viandes, Poissons, Œufs & Végé) ---
             { id: "f1", name: "Blanc de poulet (cuit)", cat: "Protéines", kcal: 165, p: 31, c: 0, f: 3.6 },
-            { id: "f2", name: "Escalope de dinde", cat: "Protéines", kcal: 135, p: 29, c: 0, f: 1.5 },
-            { id: "f3", name: "Steak haché 5% MG", cat: "Protéines", kcal: 137, p: 21, c: 0, f: 5 },
-            { id: "f4", name: "Pavé de saumon", cat: "Protéines", kcal: 208, p: 20, c: 0, f: 13 },
-            { id: "f5", name: "Filet de cabillaud / colin", cat: "Protéines", kcal: 82, p: 18, c: 0, f: 0.7 },
-            { id: "f6", name: "Thon au naturel (égoutté)", cat: "Protéines", kcal: 116, p: 26, c: 0, f: 1 },
-            { id: "f7", name: "Crevettes cuites décortiquées", cat: "Protéines", kcal: 99, p: 24, c: 0.2, f: 0.3 },
-            { id: "f8", name: "Œuf entier (~60g pièce)", cat: "Protéines", kcal: 145, p: 12.6, c: 0.7, f: 10 },
-            { id: "f9", name: "Blanc d'œuf", cat: "Protéines", kcal: 52, p: 11, c: 0.7, f: 0.2 },
-            { id: "f10", name: "Skyr nature 0%", cat: "Laitiers", kcal: 57, p: 10, c: 4, f: 0.2 },
-            { id: "f11", name: "Fromage blanc 0%", cat: "Laitiers", kcal: 48, p: 8, c: 4, f: 0.1 },
-            { id: "f12", name: "Fromage blanc 3% MG", cat: "Laitiers", kcal: 74, p: 7.5, c: 3.8, f: 3 },
-            { id: "f13", name: "Whey Isolate (poudre)", cat: "Laitiers", kcal: 370, p: 84, c: 3, f: 1.5 },
-            { id: "f14", name: "Riz basmati (cuit)", cat: "Féculents", kcal: 130, p: 2.7, c: 28, f: 0.3 },
-            { id: "f15", name: "Riz basmati (cru)", cat: "Féculents", kcal: 350, p: 8, c: 77, f: 0.8 },
-            { id: "f16", name: "Pâtes complètes (cuites)", cat: "Féculents", kcal: 124, p: 5, c: 25, f: 0.9 },
-            { id: "f17", name: "Patate douce (cuite)", cat: "Féculents", kcal: 86, p: 1.6, c: 20, f: 0.1 },
-            { id: "f18", name: "Pomme de terre (vapeur)", cat: "Féculents", kcal: 77, p: 2, c: 17, f: 0.1 },
-            { id: "f19", name: "Pain complet", cat: "Féculents", kcal: 247, p: 9, c: 43, f: 3.4 },
-            { id: "f20", name: "Quinoa (cuit)", cat: "Féculents", kcal: 120, p: 4.4, c: 21, f: 1.9 },
-            { id: "f21", name: "Lentilles vertes (cuites)", cat: "Féculents", kcal: 116, p: 9, c: 20, f: 0.4 },
-            { id: "f22", name: "Brocoli (cuit)", cat: "Légumes", kcal: 35, p: 2.4, c: 7, f: 0.4 },
-            { id: "f23", name: "Haricots verts", cat: "Légumes", kcal: 31, p: 1.8, c: 7, f: 0.1 },
-            { id: "f24", name: "Courgette", cat: "Légumes", kcal: 17, p: 1.2, c: 3.1, f: 0.3 },
-            { id: "f25", name: "Épinards frais", cat: "Légumes", kcal: 23, p: 2.9, c: 3.6, f: 0.4 },
-            { id: "f26", name: "Tomate", cat: "Légumes", kcal: 18, p: 0.9, c: 3.9, f: 0.2 },
-            { id: "f27", name: "Banane", cat: "Fruits", kcal: 89, p: 1.1, c: 23, f: 0.3 },
-            { id: "f28", name: "Pomme", cat: "Fruits", kcal: 52, p: 0.3, c: 14, f: 0.2 },
-            { id: "f29", name: "Fruits rouges / Myrtilles", cat: "Fruits", kcal: 57, p: 0.7, c: 14, f: 0.3 },
-            { id: "f30", name: "Avocat", cat: "Lipides", kcal: 160, p: 2, c: 8.5, f: 15 },
-            { id: "f31", name: "Huile d'olive", cat: "Lipides", kcal: 884, p: 0, c: 0, f: 100 },
-            { id: "f32", name: "Amandes", cat: "Lipides", kcal: 579, p: 21, c: 22, f: 50 },
-            { id: "f33", name: "Beurre de cacahuète 100%", cat: "Lipides", kcal: 588, p: 25, c: 20, f: 50 }
+            { id: "f2", name: "Filet de poulet rôti en tranches", cat: "Protéines", kcal: 112, p: 23, c: 1.5, f: 1.5 },
+            { id: "f3", name: "Escalope de dinde", cat: "Protéines", kcal: 135, p: 29, c: 0, f: 1.5 },
+            { id: "f4", name: "Jambon blanc dégraissé (sans couenne)", cat: "Protéines", kcal: 115, p: 21, c: 0.8, f: 3 },
+            { id: "f5", name: "Bacon de dinde / Filet de bacon", cat: "Protéines", kcal: 120, p: 22, c: 1, f: 3 },
+            { id: "f6", name: "Steak haché 5% MG", cat: "Protéines", kcal: 137, p: 21, c: 0, f: 5 },
+            { id: "f7", name: "Steak haché 15% MG", cat: "Protéines", kcal: 215, p: 19, c: 0, f: 15 },
+            { id: "f8", name: "Bavette / Faux-filet de bœuf", cat: "Protéines", kcal: 155, p: 26, c: 0, f: 5.5 },
+            { id: "f9", name: "Filet mignon de porc", cat: "Protéines", kcal: 143, p: 24, c: 0, f: 4.5 },
+            { id: "f10", name: "Pavé de saumon frais", cat: "Protéines", kcal: 208, p: 20, c: 0, f: 13 },
+            { id: "f11", name: "Saumon fumé", cat: "Protéines", kcal: 185, p: 22, c: 0.5, f: 10.5 },
+            { id: "f12", name: "Filet de cabillaud / colin", cat: "Protéines", kcal: 82, p: 18, c: 0, f: 0.7 },
+            { id: "f13", name: "Thon au naturel (égoutté)", cat: "Protéines", kcal: 116, p: 26, c: 0, f: 1 },
+            { id: "f14", name: "Maquereau au naturel", cat: "Protéines", kcal: 180, p: 21, c: 0, f: 10.5 },
+            { id: "f15", name: "Sardines à l'huile (égouttées)", cat: "Protéines", kcal: 208, p: 24, c: 0, f: 12 },
+            { id: "f16", name: "Crevettes cuites décortiquées", cat: "Protéines", kcal: 99, p: 24, c: 0.2, f: 0.3 },
+            { id: "f17", name: "Œuf entier (~60g pièce)", cat: "Protéines", kcal: 145, p: 12.6, c: 0.7, f: 10 },
+            { id: "f18", name: "Blanc d'œuf", cat: "Protéines", kcal: 52, p: 11, c: 0.7, f: 0.2 },
+            { id: "f19", name: "Tofu nature ferme", cat: "Protéines", kcal: 125, p: 13, c: 1.5, f: 7.5 },
+            { id: "f20", name: "Steak végétal soja/blé", cat: "Protéines", kcal: 175, p: 16, c: 11, f: 7 },
+
+            // --- LAITIERS, FROMAGES & WHEY ---
+            { id: "f21", name: "Skyr nature 0%", cat: "Laitiers", kcal: 57, p: 10, c: 4, f: 0.2 },
+            { id: "f22", name: "Fromage blanc 0%", cat: "Laitiers", kcal: 48, p: 8, c: 4, f: 0.1 },
+            { id: "f23", name: "Fromage blanc 3% MG", cat: "Laitiers", kcal: 74, p: 7.5, c: 3.8, f: 3 },
+            { id: "f24", name: "Yaourt grec nature 0%", cat: "Laitiers", kcal: 59, p: 10, c: 3.6, f: 0.4 },
+            { id: "f25", name: "Yaourt grec classique", cat: "Laitiers", kcal: 120, p: 5.5, c: 4.5, f: 9 },
+            { id: "f26", name: "Cottage cheese", cat: "Laitiers", kcal: 98, p: 11, c: 3.4, f: 4.3 },
+            { id: "f27", name: "Fromage frais tartinable léger (type Philadelphia Light)", cat: "Laitiers", kcal: 155, p: 7, c: 4.5, f: 12 },
+            { id: "f28", name: "Mozzarella légère (light)", cat: "Laitiers", kcal: 165, p: 20, c: 1.5, f: 8.5 },
+            { id: "f29", name: "Feta classique", cat: "Laitiers", kcal: 264, p: 14, c: 4, f: 21 },
+            { id: "f30", name: "Emmental râpé", cat: "Laitiers", kcal: 380, p: 28, c: 0.5, f: 29 },
+            { id: "f31", name: "Parmesan râpé", cat: "Laitiers", kcal: 402, p: 35, c: 0, f: 29 },
+            { id: "f32", name: "Fromage de chèvre frais", cat: "Laitiers", kcal: 210, p: 11, c: 2.5, f: 17 },
+            { id: "f33", name: "Lait demi-écrémé", cat: "Laitiers", kcal: 46, p: 3.2, c: 4.8, f: 1.5 },
+            { id: "f34", name: "Boisson amande sans sucre", cat: "Laitiers", kcal: 15, p: 0.5, c: 0.2, f: 1.1 },
+            { id: "f35", name: "Whey Isolate (poudre)", cat: "Laitiers", kcal: 370, p: 84, c: 3, f: 1.5 },
+
+            // --- FÉCULENTS, WRAPS & PAINS ---
+            { id: "f36", name: "Wrap / Tortilla de blé (~60g pièce)", cat: "Féculents", kcal: 310, p: 8.5, c: 52, f: 7.5 },
+            { id: "f37", name: "Wrap / Tortilla complet (~60g pièce)", cat: "Féculents", kcal: 295, p: 9.5, c: 46, f: 7 },
+            { id: "f38", name: "Wrap hyperprotéiné (~45g pièce)", cat: "Féculents", kcal: 270, p: 22, c: 24, f: 7 },
+            { id: "f39", name: "Pain pita (~60g pièce)", cat: "Féculents", kcal: 275, p: 9, c: 55, f: 1.2 },
+            { id: "f40", name: "Bagel nature (~85g pièce)", cat: "Féculents", kcal: 270, p: 10, c: 53, f: 1.5 },
+            { id: "f41", name: "Pain complet / aux céréales", cat: "Féculents", kcal: 247, p: 9, c: 43, f: 3.4 },
+            { id: "f42", name: "Baguette tradition", cat: "Féculents", kcal: 275, p: 8.5, c: 56, f: 1.2 },
+            { id: "f43", name: "Pain de mie complet", cat: "Féculents", kcal: 255, p: 9, c: 44, f: 4 },
+            { id: "f44", name: "Galette de riz soufflé", cat: "Féculents", kcal: 387, p: 8, c: 81, f: 2.8 },
+            { id: "f45", name: "Flocons d'avoine", cat: "Féculents", kcal: 379, p: 13, c: 67, f: 6.5 },
+            { id: "f46", name: "Riz basmati (cuit)", cat: "Féculents", kcal: 130, p: 2.7, c: 28, f: 0.3 },
+            { id: "f47", name: "Riz basmati (cru)", cat: "Féculents", kcal: 350, p: 8, c: 77, f: 0.8 },
+            { id: "f48", name: "Riz complet (cuit)", cat: "Féculents", kcal: 123, p: 2.7, c: 25.5, f: 1 },
+            { id: "f49", name: "Pâtes complètes (cuites)", cat: "Féculents", kcal: 124, p: 5, c: 25, f: 0.9 },
+            { id: "f50", name: "Pâtes blanches (cuites)", cat: "Féculents", kcal: 131, p: 5, c: 25, f: 1.1 },
+            { id: "f51", name: "Gnocchis à poêler / vapeur", cat: "Féculents", kcal: 165, p: 4, c: 34, f: 1.5 },
+            { id: "f52", name: "Patate douce (cuite)", cat: "Féculents", kcal: 86, p: 1.6, c: 20, f: 0.1 },
+            { id: "f53", name: "Pomme de terre (vapeur / four)", cat: "Féculents", kcal: 77, p: 2, c: 17, f: 0.1 },
+            { id: "f54", name: "Frites au four / Airfryer (surgelées)", cat: "Féculents", kcal: 165, p: 2.8, c: 26, f: 5 },
+            { id: "f55", name: "Quinoa (cuit)", cat: "Féculents", kcal: 120, p: 4.4, c: 21, f: 1.9 },
+            { id: "f56", name: "Boulgour / Semoule (cuit)", cat: "Féculents", kcal: 112, p: 3.8, c: 23, f: 0.2 },
+            { id: "f57", name: "Lentilles vertes (cuites)", cat: "Féculents", kcal: 116, p: 9, c: 20, f: 0.4 },
+            { id: "f58", name: "Pois chiches (cuits / boîte égouttés)", cat: "Féculents", kcal: 139, p: 7.5, c: 21, f: 2.5 },
+            { id: "f59", name: "Haricots rouges (cuits)", cat: "Féculents", kcal: 127, p: 8.7, c: 22.8, f: 0.5 },
+
+            // --- LÉGUMES (Large choix) ---
+            { id: "f60", name: "Brocoli", cat: "Légumes", kcal: 35, p: 2.4, c: 7, f: 0.4 },
+            { id: "f61", name: "Haricots verts", cat: "Légumes", kcal: 31, p: 1.8, c: 7, f: 0.1 },
+            { id: "f62", name: "Courgette", cat: "Légumes", kcal: 17, p: 1.2, c: 3.1, f: 0.3 },
+            { id: "f63", name: "Épinards frais / surgelés", cat: "Légumes", kcal: 23, p: 2.9, c: 3.6, f: 0.4 },
+            { id: "f64", name: "Tomate / Tomates cerises", cat: "Légumes", kcal: 18, p: 0.9, c: 3.9, f: 0.2 },
+            { id: "f65", name: "Concombre", cat: "Légumes", kcal: 15, p: 0.7, c: 3.6, f: 0.1 },
+            { id: "f66", name: "Salade verte / Laitue / Roquette / Mâche", cat: "Légumes", kcal: 16, p: 1.4, c: 2.5, f: 0.2 },
+            { id: "f67", name: "Carotte (crue ou cuite)", cat: "Légumes", kcal: 41, p: 0.9, c: 9.6, f: 0.2 },
+            { id: "f68", name: "Poivron (rouge, jaune, vert)", cat: "Légumes", kcal: 26, p: 1, c: 6, f: 0.3 },
+            { id: "f69", name: "Champignons de Paris", cat: "Légumes", kcal: 22, p: 3.1, c: 3.3, f: 0.3 },
+            { id: "f70", name: "Aubergine", cat: "Légumes", kcal: 25, p: 1, c: 5.9, f: 0.2 },
+            { id: "f71", name: "Chou-fleur", cat: "Légumes", kcal: 25, p: 1.9, c: 5, f: 0.3 },
+            { id: "f72", name: "Choux de Bruxelles", cat: "Légumes", kcal: 43, p: 3.4, c: 9, f: 0.3 },
+            { id: "f73", name: "Oignon / Échalote", cat: "Légumes", kcal: 40, p: 1.1, c: 9.3, f: 0.1 },
+            { id: "f74", name: "Poireau", cat: "Légumes", kcal: 31, p: 1.5, c: 7, f: 0.3 },
+            { id: "f75", name: "Asperges vertes", cat: "Légumes", kcal: 20, p: 2.2, c: 3.9, f: 0.1 },
+            { id: "f76", name: "Courge Butternut / Potimarron", cat: "Légumes", kcal: 45, p: 1, c: 11.7, f: 0.1 },
+            { id: "f77", name: "Petits pois (cuits)", cat: "Légumes", kcal: 81, p: 5.4, c: 14.5, f: 0.4 },
+            { id: "f78", name: "Maïs doux (égoutté)", cat: "Légumes", kcal: 86, p: 3.3, c: 19, f: 1.2 },
+            { id: "f79", name: "Betterave cuite", cat: "Légumes", kcal: 43, p: 1.6, c: 10, f: 0.2 },
+            { id: "f80", name: "Ratatouille cuisinée (légère)", cat: "Légumes", kcal: 48, p: 1.2, c: 5.5, f: 2.2 },
+            { id: "f81", name: "Chou rouge / Chou blanc", cat: "Légumes", kcal: 28, p: 1.4, c: 6.5, f: 0.2 },
+
+            // --- FRUITS ---
+            { id: "f82", name: "Banane", cat: "Fruits", kcal: 89, p: 1.1, c: 23, f: 0.3 },
+            { id: "f83", name: "Pomme", cat: "Fruits", kcal: 52, p: 0.3, c: 14, f: 0.2 },
+            { id: "f84", name: "Poire", cat: "Fruits", kcal: 57, p: 0.4, c: 15, f: 0.1 },
+            { id: "f85", name: "Fruits rouges / Myrtilles / Framboises", cat: "Fruits", kcal: 57, p: 0.7, c: 14, f: 0.3 },
+            { id: "f86", name: "Fraises", cat: "Fruits", kcal: 32, p: 0.7, c: 7.7, f: 0.3 },
+            { id: "f87", name: "Kiwi", cat: "Fruits", kcal: 61, p: 1.1, c: 15, f: 0.5 },
+            { id: "f88", name: "Orange / Clémentine", cat: "Fruits", kcal: 47, p: 0.9, c: 12, f: 0.1 },
+            { id: "f89", name: "Mangue / Ananas", cat: "Fruits", kcal: 58, p: 0.7, c: 14.5, f: 0.3 },
+            { id: "f90", name: "Compote de pomme sans sucre ajouté", cat: "Fruits", kcal: 54, p: 0.3, c: 12.5, f: 0.2 },
+
+            // --- LIPIDES & OLÉAGINEUX ---
+            { id: "f91", name: "Avocat", cat: "Lipides", kcal: 160, p: 2, c: 8.5, f: 15 },
+            { id: "f92", name: "Huile d'olive", cat: "Lipides", kcal: 884, p: 0, c: 0, f: 100 },
+            { id: "f93", name: "Beurre doux / demi-sel", cat: "Lipides", kcal: 717, p: 0.9, c: 0.1, f: 81 },
+            { id: "f94", name: "Amandes nature", cat: "Lipides", kcal: 579, p: 21, c: 22, f: 50 },
+            { id: "f95", name: "Noix / Noix de cajou", cat: "Lipides", kcal: 610, p: 16, c: 20, f: 54 },
+            { id: "f96", name: "Beurre de cacahuète 100%", cat: "Lipides", kcal: 588, p: 25, c: 20, f: 50 },
+            { id: "f97", name: "Graines de chia / lin", cat: "Lipides", kcal: 486, p: 17, c: 42, f: 31 },
+            { id: "f98", name: "Olives vertes / noires", cat: "Lipides", kcal: 145, p: 1, c: 3.8, f: 15 },
+
+            // --- SAUCES HEALTHY, CONDIMENTS & EXTRAS ---
+            { id: "f99", name: "Sauce yaourt / Tzatziki léger", cat: "Sauces & Plaisirs", kcal: 85, p: 4, c: 5, f: 5.5 },
+            { id: "f100", name: "Sauce tomate basilic (sans sucre)", cat: "Sauces & Plaisirs", kcal: 45, p: 1.5, c: 7, f: 1 },
+            { id: "f101", name: "Moutarde de Dijon", cat: "Sauces & Plaisirs", kcal: 145, p: 7, c: 5, f: 10 },
+            { id: "f102", name: "Ketchup allégé (-50% sucre)", cat: "Sauces & Plaisirs", kcal: 65, p: 1.5, c: 14, f: 0.2 },
+            { id: "f103", name: "Sauce soja salée / sucrée légère", cat: "Sauces & Plaisirs", kcal: 55, p: 6, c: 7, f: 0.1 },
+            { id: "f104", name: "Sauce Sriracha / Piment doux", cat: "Sauces & Plaisirs", kcal: 93, p: 2, c: 19, f: 0.9 },
+            { id: "f105", name: "Mayonnaise allégée", cat: "Sauces & Plaisirs", kcal: 260, p: 1, c: 9, f: 25 },
+            { id: "f106", name: "Pesto vert au basilic", cat: "Sauces & Plaisirs", kcal: 420, p: 5, c: 6, f: 42 },
+            { id: "f107", name: "Houmous classique", cat: "Sauces & Plaisirs", kcal: 235, p: 7.5, c: 14, f: 16 },
+            { id: "f108", name: "Guacamole frais", cat: "Sauces & Plaisirs", kcal: 155, p: 2, c: 8.5, f: 14 },
+            { id: "f109", name: "Miel / Sirop d'érable", cat: "Sauces & Plaisirs", kcal: 304, p: 0.3, c: 82, f: 0 },
+            { id: "f110", name: "Chocolat noir 70% cacao", cat: "Sauces & Plaisirs", kcal: 560, p: 8, c: 36, f: 41 },
+            { id: "f111", name: "Barre protéinée (moyenne)", cat: "Sauces & Plaisirs", kcal: 360, p: 33, c: 32, f: 11 }
         ];
 
         // =========================================================================
@@ -1071,9 +1212,20 @@
                 customFoods: [],
                 dailyLogs: {},
                 measurements: [],
-                mealPlan: null
+                mealPlan: null,
+                planPreferences: {
+                    styles: ["Airfryer / Four"],
+                    exclusions: []
+                }
             };
         }
+
+        let appState = loadState();
+        let selectedFoodObj = null;
+        let currentPlateBase64 = null;
+        let currentPlateMime = "image/jpeg";
+        let lastAiParsedItems = [];
+        let isPrintPreviewActive = false;
 
         function loadState() {
             try {
@@ -1090,18 +1242,13 @@
         }
 
         function getTodayStr() {
-            return new Date().toISOString().split("T")[0];
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            return new Date(now.getTime() - offset).toISOString().split("T")[0];
         }
 
-        let appState = loadState();
-        let selectedFoodObj = null;
-        let currentPlateBase64 = null;
-        let currentPlateMime = "image/jpeg";
-        let lastAiParsedItems = [];
-        let isPrintPreviewActive = false;
-
         // =========================================================================
-        // 4. TOASTS, MODALE, EXPORT/IMPORT & NAVIGATION
+        // 4. NOTIFICATIONS, MODALE, SAUVEGARDE JSON & NAVIGATION
         // =========================================================================
         function showToast(message, type = "success") {
             const container = document.getElementById("toast-container");
@@ -1141,8 +1288,8 @@
 
         function requestResetApp() {
             showConfirmModal(
-                "Réinitialiser l'application ?",
-                "Votre profil, votre journal, vos plannings et vos mensurations seront effacés (votre clé API Gemini restera conservée).",
+                "Réinitialiser NutriCalibre ?",
+                "Toutes vos données (profil, journal, planning et mensurations) seront effacées pour repartir d'un écran vierge. Votre clé API restera conservée.",
                 () => {
                     localStorage.removeItem(STATE_STORAGE);
                     appState = getVirginState();
@@ -1153,22 +1300,23 @@
                     document.getElementById("results-card").classList.add("hidden");
                     document.getElementById("results-placeholder").classList.remove("hidden");
                     document.getElementById("welcome-banner").classList.remove("hidden");
+                    if (isPrintPreviewActive) togglePrintPreviewMode();
                     refreshAllViews();
                     switchTab("profil");
-                    showToast("Application réinitialisée !", "info");
+                    showToast("Application réinitialisée à zéro !", "info");
                 }
             );
         }
 
         function exportBackupData() {
             try {
-                const backup = {
+                const payload = {
                     app: "NutriCalibre",
                     version: 1,
                     exportedAt: new Date().toISOString(),
                     state: appState
                 };
-                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
@@ -1177,47 +1325,34 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast("Sauvegarde téléchargée sur votre appareil !", "success");
+                showToast("Sauvegarde téléchargée avec succès !", "success");
             } catch {
                 showToast("Impossible d'exporter la sauvegarde.", "error");
             }
         }
 
         function importBackupFile(event) {
-            const file = event.target.files && event.target.files[0];
+            const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    const importedState = parsed && parsed.state ? parsed.state : parsed;
-                    if (!importedState || typeof importedState !== "object" || !("profile" in importedState || "measurements" in importedState || "dailyLogs" in importedState)) {
-                        throw new Error("Fichier de sauvegarde non reconnu.");
+                    const importedState = parsed.state || parsed;
+                    if (!importedState || typeof importedState !== "object") {
+                        throw new Error("Format invalide");
                     }
-
-                    const applyImport = () => {
-                        appState = { ...getVirginState(), ...importedState };
-                        saveState();
-                        refreshAllViews();
-                        showToast("Sauvegarde restaurée avec succès !", "success");
-                    };
-
-                    if (appState.profile || appState.measurements.length > 0) {
-                        showConfirmModal(
-                            "Restaurer cette sauvegarde ?",
-                            "Les données actuelles (profil, journal, plannings et mensurations) seront remplacées par celles du fichier importé.",
-                            applyImport
-                        );
-                    } else {
-                        applyImport();
-                    }
-                } catch (err) {
-                    showToast(`Erreur d'import : ${err.message}`, "error");
+                    appState = { ...getVirginState(), ...importedState };
+                    saveState();
+                    refreshAllViews();
+                    showToast("Sauvegarde restaurée avec succès !", "success");
+                } catch {
+                    showToast("Fichier de sauvegarde invalide ou corrompu.", "error");
+                } finally {
+                    event.target.value = "";
                 }
             };
             reader.readAsText(file);
-            event.target.value = "";
         }
 
         function switchTab(tabId) {
@@ -1226,32 +1361,51 @@
             if (target) target.classList.remove("hidden");
 
             document.querySelectorAll(".nav-btn").forEach(btn => {
-                const active = btn.dataset.tab === tabId;
-                btn.classList.toggle("bg-emerald-500/20", active);
-                btn.classList.toggle("text-emerald-400", active);
-                btn.classList.toggle("border", active);
-                btn.classList.toggle("border-emerald-500/30", active);
-                btn.classList.toggle("text-slate-400", !active);
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add("bg-emerald-500/20", "text-emerald-400", "border", "border-emerald-500/30");
+                    btn.classList.remove("text-slate-400", "hover:text-white");
+                } else {
+                    btn.classList.remove("bg-emerald-500/20", "text-emerald-400", "border", "border-emerald-500/30");
+                    btn.classList.add("text-slate-400", "hover:text-white");
+                }
             });
 
             document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
-                const active = btn.dataset.tab === tabId;
-                btn.classList.toggle("text-emerald-400", active);
-                btn.classList.toggle("bg-emerald-500/10", active);
-                btn.classList.toggle("text-slate-400", !active);
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add("text-emerald-400", "bg-emerald-500/10");
+                    btn.classList.remove("text-slate-400");
+                } else {
+                    btn.classList.remove("text-emerald-400", "bg-emerald-500/10");
+                    btn.classList.add("text-slate-400");
+                }
             });
 
             if (tabId === "journal") renderJournalView();
-            if (tabId === "planning") renderPlanningView();
-            if (tabId === "suivi") {
-                renderMeasurementsView();
-                setTimeout(drawWeightChart, 50);
+            if (tabId === "planning") {
+                renderPlanPreferencesUI();
+                renderPlanningView();
             }
+            if (tabId === "suivi") renderMeasurementsView();
         }
 
         // =========================================================================
-        // 5. CALCULATEUR MÉTABOLIQUE & PROFIL (CURSEUR PROTÉINES SUR POIDS OBJECTIF)
+        // 5. CALCULATEUR MÉTABOLIQUE (MIFFLIN-ST JEOR + CURSEUR PROTÉINES)
         // =========================================================================
+        function handleGoalChange() {
+            const goal = document.getElementById("inp-goal").value;
+            const rateBox = document.getElementById("rate-container");
+            const protSlider = document.getElementById("inp-prot-ratio");
+
+            if (goal === "loss_muscle" || goal === "loss_classic") {
+                rateBox.classList.remove("hidden");
+                protSlider.value = goal === "loss_muscle" ? 1.8 : 1.5;
+            } else {
+                rateBox.classList.add("hidden");
+                protSlider.value = 1.6;
+            }
+            updateProtRatioLabel();
+        }
+
         function updateProtRatioLabel() {
             const val = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
             document.getElementById("prot-ratio-display").textContent = `${val.toFixed(1).replace(".", ",")} g/kg`;
@@ -1259,15 +1413,8 @@
         }
 
         function updateRateLabel() {
-            const r = parseFloat(document.getElementById("inp-rate").value) || 0.5;
-            document.getElementById("rate-display").textContent = `${r.toFixed(1)} kg / semaine`;
-            livePreviewMetabolism();
-        }
-
-        function handleGoalChange() {
-            const goal = document.getElementById("inp-goal").value;
-            const rateBox = document.getElementById("rate-container");
-            rateBox.classList.toggle("hidden", !(goal === "loss_muscle" || goal === "loss_classic"));
+            const val = parseFloat(document.getElementById("inp-rate").value) || 0.5;
+            document.getElementById("rate-display").textContent = `${val.toFixed(1)} kg / semaine`;
             livePreviewMetabolism();
         }
 
@@ -1278,44 +1425,42 @@
 
             const tdee = Math.round(bmr * data.activity);
             const rate = parseFloat(data.rate) || 0.5;
-            const isLoss = data.goal === "loss_muscle" || data.goal === "loss_classic";
+            const isLoss = (data.goal === "loss_muscle" || data.goal === "loss_classic");
             const dailyDiff = isLoss ? -Math.round(rate * 1100) : 0;
-            const rawTarget = tdee + dailyDiff;
-            const targetKcal = Math.max(1150, rawTarget);
+            const rawTargetKcal = tdee + dailyDiff;
+            const targetKcal = Math.max(1150, rawTargetKcal);
 
-            // Protéines calculées sur le poids objectif (ou poids actuel si non renseigné)
             const protRatio = parseFloat(data.protRatio) || 1.8;
-            const hasTargetW = !isNaN(data.targetWeight) && data.targetWeight > 0;
-            const protBaseWeight = hasTargetW ? data.targetWeight : data.weight;
+            const protBaseWeight = (data.targetWeight && data.targetWeight > 0) ? data.targetWeight : data.weight;
             const targetProt = Math.round(protBaseWeight * protRatio);
-            const protFormulaLabel = `${protBaseWeight.toFixed(1).replace(".", ",")} kg (${hasTargetW ? "poids objectif" : "poids actuel"}) × ${protRatio.toFixed(1).replace(".", ",")} g/kg = ${targetProt} g`;
-
             const targetFats = Math.round(protBaseWeight * 0.85);
             const remCarbsKcal = Math.max(160, targetKcal - (targetProt * 4) - (targetFats * 9));
             const targetCarbs = Math.round(remCarbsKcal / 4);
 
-            // Alerte santé si perte trop rapide
-            const pctPerWeek = (rate / data.weight) * 100;
-            const minSafe = data.sex === "homme" ? 1500 : 1200;
-            let isTooFast = false, alertText = "", adviceText = "";
-            if (isLoss && (pctPerWeek > 0.95 || Math.abs(dailyDiff) > 850 || rawTarget < minSafe)) {
+            const pctBodyWeightPerWeek = (rate / data.weight) * 100;
+            const minSafeKcal = data.sex === "homme" ? 1500 : 1200;
+            let isTooFast = false;
+            let alertText = "";
+            let adviceText = "";
+
+            if (isLoss && (pctBodyWeightPerWeek > 0.95 || Math.abs(dailyDiff) > 850 || rawTargetKcal < minSafeKcal)) {
                 isTooFast = true;
-                const safeRate = Math.max(0.3, +(data.weight * 0.007).toFixed(1));
-                const safeKcal = Math.max(minSafe, Math.round(tdee - (safeRate * 1100)));
-                alertText = `Rythme choisi : -${rate.toFixed(1)} kg/sem (${pctPerWeek.toFixed(1)}% du poids/sem, ${rawTarget} kcal/j).`;
-                adviceText = `Maigrir trop vite favorise la fonte musculaire, la fatigue et l'effet rebond. Visez plutôt ${safeRate} kg/sem (~${safeKcal} kcal/j) en gardant ${targetProt}g de protéines et en augmentant votre marche quotidienne.`;
+                const safeRate = Math.min(0.6, +(data.weight * 0.0075).toFixed(1));
+                const safeKcal = Math.max(minSafeKcal, Math.round(tdee - (safeRate * 1100)));
+                alertText = `Rythme demandé : ${rate.toFixed(1)} kg/semaine (${pctBodyWeightPerWeek.toFixed(1)}% du poids/sem, déficit de ${Math.abs(dailyDiff)} kcal/j, cible ${rawTargetKcal} kcal).`;
+                adviceText = `Un déficit trop agressif provoque fatigue, fonte musculaire et effet rebond. Visez plutôt ${safeRate} kg/semaine (~${safeKcal} kcal/j) avec ${targetProt}g de protéines et 8 000 à 10 000 pas par jour.`;
             }
 
             let etaText = "Maintien du poids";
-            const deltaW = hasTargetW ? Math.abs(data.weight - data.targetWeight) : 0;
+            const deltaW = Math.abs(data.weight - data.targetWeight);
             if (isLoss && deltaW > 0.1) {
                 const wks = Math.ceil(deltaW / rate);
-                etaText = `~${wks} semaine${wks > 1 ? "s" : ""} (${deltaW.toFixed(1)} kg à -${rate.toFixed(1)} kg/sem)`;
+                etaText = `~${wks} semaine${wks > 1 ? "s" : ""} (${deltaW.toFixed(1)} kg à perdre à ${rate.toFixed(1)} kg/sem)`;
             }
 
             return {
                 bmr, tdee, targetKcal, dailyDiff,
-                targetProt, protRatio, protBaseWeight, protFormulaLabel,
+                targetProt, protRatio, protBaseWeight,
                 targetCarbs, targetFats,
                 isTooFast, alertText, adviceText, etaText
             };
@@ -1333,15 +1478,20 @@
             const protRatio = parseFloat(document.getElementById("inp-prot-ratio").value) || 1.8;
 
             if (!sex || !age || !height || !weight || !activity || !goal) return;
-            const calc = computeMetabolism({ sex, age, height, weight, targetWeight, activity, goal, rate, protRatio });
+
+            const calc = computeMetabolism({
+                sex, age, height, weight,
+                targetWeight: isNaN(targetWeight) ? weight : targetWeight,
+                activity, goal, rate, protRatio
+            });
             renderMetabolismCard(calc, false);
         }
 
         function renderMetabolismCard(calc, isSaved) {
             document.getElementById("results-placeholder").classList.add("hidden");
             document.getElementById("results-card").classList.remove("hidden");
-            document.getElementById("res-profile-badge").textContent = isSaved ? "Profil enregistré ✓" : "Aperçu en direct";
 
+            document.getElementById("res-profile-badge").textContent = isSaved ? "Profil enregistré ✓" : "Aperçu";
             document.getElementById("res-bmr").textContent = `${calc.bmr} kcal`;
             document.getElementById("res-tdee").textContent = `${calc.tdee} kcal`;
             document.getElementById("res-target-kcal").textContent = `${calc.targetKcal} kcal`;
@@ -1350,7 +1500,11 @@
             document.getElementById("res-prot").textContent = `${calc.targetProt} g`;
             document.getElementById("res-carbs").textContent = `${calc.targetCarbs} g`;
             document.getElementById("res-fats").textContent = `${calc.targetFats} g`;
-            document.getElementById("res-prot-formula").textContent = `Formule protéines : ${calc.protFormulaLabel}`;
+
+            const formulaEl = document.getElementById("res-prot-formula");
+            if (formulaEl) {
+                formulaEl.textContent = `Protéines : ${calc.protBaseWeight} kg (poids objectif) × ${calc.protRatio.toFixed(1).replace(".", ",")} g/kg = ${calc.targetProt} g/jour`;
+            }
 
             const alertBox = document.getElementById("metabolic-alert");
             if (calc.isTooFast) {
@@ -1385,7 +1539,7 @@
 
             if (appState.measurements.length === 0) {
                 appState.measurements.push({
-                    id: "m_init_" + Date.now(),
+                    id: "init_" + Date.now(),
                     date: getTodayStr(),
                     weight,
                     waist: null, chest: null, hips: null, arm: null, thigh: null
@@ -1396,7 +1550,7 @@
             document.getElementById("welcome-banner").classList.add("hidden");
             renderMetabolismCard(calc, true);
             updateHeaderSubtitle();
-            showToast("Profil enregistré ! Vos objectifs sont actifs.", "success");
+            showToast("Profil métabolique enregistré !", "success");
         });
 
         function updateHeaderSubtitle() {
@@ -1416,8 +1570,8 @@
             return [...appState.customFoods, ...DEFAULT_FOODS];
         }
 
-        function openFoodModal(meal = "Déjeuner") {
-            document.getElementById("sel-food-meal").value = meal;
+        function openFoodModal(defaultMeal = "Déjeuner") {
+            document.getElementById("sel-food-meal").value = defaultMeal;
             document.getElementById("food-modal").classList.remove("hidden");
             document.getElementById("food-modal").classList.add("flex");
             renderFoodLibrary();
@@ -1443,37 +1597,41 @@
                 showToast("Indiquez le nom et les calories pour 100g.", "error");
                 return;
             }
-            appState.customFoods.unshift({ id: "cf_" + Date.now(), name, cat: "Perso", kcal, p, c, f });
+            appState.customFoods.unshift({ id: "c_" + Date.now(), name, cat: "Perso", kcal, p, c, f });
             saveState();
             ["cf-name", "cf-kcal", "cf-prot", "cf-carbs", "cf-fats"].forEach(id => document.getElementById(id).value = "");
             document.getElementById("custom-food-box").classList.add("hidden");
             renderFoodLibrary();
-            showToast(`"${name}" ajouté à vos aliments !`, "success");
+            showToast(`"${name}" enregistré dans Mes Aliments Perso !`, "success");
         }
 
         function renderFoodLibrary() {
-            const q = document.getElementById("food-search").value.toLowerCase().trim();
+            const query = (document.getElementById("food-search").value || "").toLowerCase().trim();
             const cat = document.getElementById("food-category").value;
             const listEl = document.getElementById("food-library-list");
 
-            const filtered = getAllFoods().filter(f => f.name.toLowerCase().includes(q) && (cat === "all" || f.cat === cat));
+            const filtered = getAllFoods().filter(item =>
+                item.name.toLowerCase().includes(query) && (cat === "all" || item.cat === cat)
+            );
+
             if (!filtered.length) {
                 listEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Aucun aliment trouvé.</p>`;
                 return;
             }
-            listEl.innerHTML = filtered.map(f => `
-                <div onclick="selectFoodForAdding('${f.id}')" class="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition flex items-center justify-between gap-2">
+
+            listEl.innerHTML = filtered.map(food => `
+                <div onclick="selectFoodForAdding('${food.id}')" class="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition flex items-center justify-between gap-2">
                     <div>
-                        <span class="text-xs font-semibold text-white block">${f.name}</span>
-                        <span class="text-[10px] text-slate-400">${f.cat} • P:${f.p}g | G:${f.c}g | L:${f.f}g</span>
+                        <span class="text-xs font-semibold text-white block">${food.name}</span>
+                        <span class="text-[10px] text-slate-400">${food.cat} • P:${food.p}g | G:${food.c}g | L:${food.f}g (100g)</span>
                     </div>
-                    <span class="text-xs font-bold text-cyan-400 whitespace-nowrap">${f.kcal} kcal</span>
+                    <span class="text-xs font-bold text-cyan-400 whitespace-nowrap">${food.kcal} kcal</span>
                 </div>
             `).join("");
         }
 
-        function selectFoodForAdding(id) {
-            selectedFoodObj = getAllFoods().find(f => f.id === id);
+        function selectFoodForAdding(foodId) {
+            selectedFoodObj = getAllFoods().find(f => f.id === foodId);
             if (!selectedFoodObj) return;
             document.getElementById("selected-food-panel").classList.remove("hidden");
             document.getElementById("sel-food-name").textContent = selectedFoodObj.name;
@@ -1484,36 +1642,37 @@
 
         function updateSelectedFoodPreview() {
             if (!selectedFoodObj) return;
-            const g = parseFloat(document.getElementById("sel-food-grams").value) || 0;
-            const r = g / 100;
-            document.getElementById("sel-food-preview").textContent = `${Math.round(selectedFoodObj.kcal * r)} kcal • ${(selectedFoodObj.p * r).toFixed(1)}g P`;
+            const grams = parseFloat(document.getElementById("sel-food-grams").value) || 0;
+            const r = grams / 100;
+            document.getElementById("sel-food-preview").textContent = `${Math.round(selectedFoodObj.kcal * r)} kcal • ${(selectedFoodObj.p * r).toFixed(1)}g P • ${(selectedFoodObj.c * r).toFixed(1)}g G`;
         }
 
         function addSelectedFoodToLog() {
             if (!selectedFoodObj) return;
-            const g = parseFloat(document.getElementById("sel-food-grams").value);
+            const grams = parseFloat(document.getElementById("sel-food-grams").value);
             const meal = document.getElementById("sel-food-meal").value;
-            if (!g || g <= 0) {
-                showToast("Quantité invalide.", "error");
+            if (!grams || grams <= 0) {
+                showToast("Saisissez un grammage valide.", "error");
                 return;
             }
-            const r = g / 100;
-            const today = getTodayStr();
-            if (!appState.dailyLogs[today]) appState.dailyLogs[today] = [];
-            appState.dailyLogs[today].push({
+            const r = grams / 100;
+            const entry = {
                 id: "log_" + Date.now() + Math.random().toString(36).slice(2, 6),
                 name: selectedFoodObj.name,
-                grams: Math.round(g),
+                grams: Math.round(grams),
                 meal,
                 kcal: Math.round(selectedFoodObj.kcal * r),
                 p: +(selectedFoodObj.p * r).toFixed(1),
                 c: +(selectedFoodObj.c * r).toFixed(1),
                 f: +(selectedFoodObj.f * r).toFixed(1)
-            });
+            };
+            const today = getTodayStr();
+            if (!appState.dailyLogs[today]) appState.dailyLogs[today] = [];
+            appState.dailyLogs[today].push(entry);
             saveState();
             closeFoodModal();
             renderJournalView();
-            showToast(`${selectedFoodObj.name} (${Math.round(g)}g) ajouté !`, "success");
+            showToast(`${entry.name} (${entry.grams}g) ajouté !`, "success");
         }
 
         function removeLogItem(id) {
@@ -1525,107 +1684,50 @@
         }
 
         function clearTodayLog() {
-            showConfirmModal("Vider le journal du jour ?", "Tous les aliments enregistrés aujourd'hui seront supprimés.", () => {
+            showConfirmModal("Vider le journal du jour ?", "Tous les aliments saisis aujourd'hui seront supprimés.", () => {
                 appState.dailyLogs[getTodayStr()] = [];
                 saveState();
                 renderJournalView();
-                showToast("Journal vidé.", "info");
+                showToast("Journal du jour vidé.", "info");
             });
         }
 
         function getTodayTotals() {
             const items = appState.dailyLogs[getTodayStr()] || [];
-            return items.reduce((a, i) => {
-                a.kcal += i.kcal; a.p += i.p; a.c += i.c; a.f += i.f;
-                return a;
+            return items.reduce((acc, i) => {
+                acc.kcal += i.kcal; acc.p += i.p; acc.c += i.c; acc.f += i.f;
+                return acc;
             }, { kcal: 0, p: 0, c: 0, f: 0 });
         }
 
-        function renderJournalView() {
-            const today = getTodayStr();
-            document.getElementById("journal-date-label").textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-            document.getElementById("journal-no-profile").classList.toggle("hidden", !!appState.profile);
-
-            const totals = getTodayTotals();
-            const t = appState.profile ? appState.profile.calc : { targetKcal: 0, targetProt: 0, targetCarbs: 0, targetFats: 0 };
-
-            updateGauge("kcal", Math.round(totals.kcal), t.targetKcal, "kcal", false);
-            updateGauge("prot", +totals.p.toFixed(1), t.targetProt, "g", true);
-            updateGauge("carbs", +totals.c.toFixed(1), t.targetCarbs, "g", false);
-            updateGauge("fats", +totals.f.toFixed(1), t.targetFats, "g", false);
-
-            const alertEl = document.getElementById("macro-exceed-alert");
-            const msgEl = document.getElementById("macro-exceed-msg");
-            if (appState.profile && (totals.c > t.targetCarbs || totals.kcal > t.targetKcal)) {
-                alertEl.classList.remove("hidden");
-                msgEl.textContent = totals.c > t.targetCarbs
-                    ? `Plafond de glucides dépassé (+${(totals.c - t.targetCarbs).toFixed(1)}g). Privilégiez protéines maigres et légumes.`
-                    : `Cible calorique dépassée (+${Math.round(totals.kcal - t.targetKcal)} kcal).`;
-            } else {
-                alertEl.classList.add("hidden");
-            }
-
-            const items = appState.dailyLogs[today] || [];
-            const slots = ["Petit-déjeuner", "Déjeuner", "Dîner", "Collation"];
-            document.getElementById("meal-slots-grid").innerHTML = slots.map(slot => {
-                const sItems = items.filter(i => i.meal === slot);
-                const sKcal = Math.round(sItems.reduce((s, i) => s + i.kcal, 0));
-                const sProt = sItems.reduce((s, i) => s + i.p, 0).toFixed(1);
-                return `
-                    <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-slate-800">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                            <div>
-                                <h3 class="text-sm font-bold text-white">${slot}</h3>
-                                <span class="text-[11px] text-slate-400">${sKcal} kcal • P: ${sProt}g</span>
-                            </div>
-                            <button onclick="openFoodModal('${slot}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold">+ Ajouter</button>
-                        </div>
-                        <div class="space-y-1.5">
-                            ${sItems.length === 0
-                                ? `<p class="text-[11px] text-slate-500 text-center py-3">Aucun aliment</p>`
-                                : sItems.map(i => `
-                                    <div class="flex items-center justify-between text-xs bg-slate-950/70 px-3 py-2 rounded-xl border border-slate-800/70">
-                                        <div>
-                                            <span class="font-medium text-slate-200 block">${i.name} (${i.grams}g)</span>
-                                            <span class="text-[10px] text-slate-400">${i.kcal} kcal • P:${i.p}g G:${i.c}g L:${i.f}g</span>
-                                        </div>
-                                        <button onclick="removeLogItem('${i.id}')" class="text-slate-500 hover:text-rose-400 p-1">✕</button>
-                                    </div>
-                                `).join("")
-                            }
-                        </div>
-                    </div>
-                `;
-            }).join("");
-        }
-
-        function updateGauge(key, cur, target, unit, isMin) {
+        function updateGauge(key, current, target, unit, isMinTarget) {
             const textEl = document.getElementById(`stat-${key}-text`);
             const barEl = document.getElementById(`bar-${key}`);
             const remEl = document.getElementById(`stat-${key}-rem`);
             const cardEl = document.getElementById(`card-${key}`);
 
             if (!target || target <= 0) {
-                textEl.textContent = `${cur} / -- ${unit}`;
+                textEl.textContent = `${current} / -- ${unit}`;
                 barEl.style.width = "0%";
                 remEl.textContent = "Profil requis";
                 return;
             }
-            textEl.textContent = `${cur} / ${target} ${unit}`;
-            barEl.style.width = `${Math.min(100, Math.round((cur / target) * 100))}%`;
-            const diff = +(target - cur).toFixed(1);
+            textEl.textContent = `${current} / ${target} ${unit}`;
+            const pct = Math.min(100, Math.round((current / target) * 100));
+            barEl.style.width = `${pct}%`;
+            const diff = +(target - current).toFixed(1);
 
-            if (isMin) {
-                if (cur >= target) {
-                    remEl.innerHTML = `<span class="text-emerald-400 font-bold">Atteint ! (+${Math.abs(diff)} ${unit})</span>`;
+            if (isMinTarget) {
+                if (current >= target) {
+                    remEl.innerHTML = `<span class="text-emerald-400 font-bold">Objectif atteint ! (+${Math.abs(diff)} ${unit})</span>`;
                     cardEl.classList.add("border-emerald-500/50");
                 } else {
                     remEl.textContent = `À atteindre : ${diff} ${unit}`;
                     cardEl.classList.remove("border-emerald-500/50");
                 }
             } else {
-                if (cur > target) {
-                    remEl.innerHTML = `<span class="text-rose-400 font-bold">Dépassé de ${Math.abs(diff)} ${unit}</span>`;
+                if (current > target) {
+                    remEl.innerHTML = `<span class="text-rose-400 font-bold">Dépassé de ${Math.abs(diff)} ${unit} !</span>`;
                     barEl.classList.add("bg-rose-500");
                     cardEl.classList.add("border-rose-500/60");
                 } else {
@@ -1636,11 +1738,79 @@
             }
         }
 
+        function renderJournalView() {
+            const today = getTodayStr();
+            document.getElementById("journal-date-label").textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+            document.getElementById("journal-no-profile").classList.toggle("hidden", !!appState.profile);
+
+            const totals = getTodayTotals();
+            const targets = appState.profile ? appState.profile.calc : { targetKcal: 0, targetProt: 0, targetCarbs: 0, targetFats: 0 };
+
+            updateGauge("kcal", Math.round(totals.kcal), targets.targetKcal, "kcal", false);
+            updateGauge("prot", +totals.p.toFixed(1), targets.targetProt, "g", true);
+            updateGauge("carbs", +totals.c.toFixed(1), targets.targetCarbs, "g", false);
+            updateGauge("fats", +totals.f.toFixed(1), targets.targetFats, "g", false);
+
+            const exceedAlert = document.getElementById("macro-exceed-alert");
+            const exceedMsg = document.getElementById("macro-exceed-msg");
+            if (appState.profile) {
+                const overCarbs = totals.c > targets.targetCarbs;
+                const overKcal = totals.kcal > targets.targetKcal;
+                if (overCarbs || overKcal) {
+                    exceedAlert.classList.remove("hidden");
+                    exceedMsg.textContent = overCarbs && overKcal
+                        ? `Plafonds dépassés : +${Math.round(totals.kcal - targets.targetKcal)} kcal et +${(totals.c - targets.targetCarbs).toFixed(1)}g de glucides !`
+                        : overCarbs
+                            ? `Plafond de glucides dépassé (+${(totals.c - targets.targetCarbs).toFixed(1)}g). Privilégiez protéines maigres et légumes verts.`
+                            : `Objectif calorique dépassé (+${Math.round(totals.kcal - targets.targetKcal)} kcal).`;
+                } else {
+                    exceedAlert.classList.add("hidden");
+                }
+            } else {
+                exceedAlert.classList.add("hidden");
+            }
+
+            const items = appState.dailyLogs[today] || [];
+            const slots = ["Petit-déjeuner", "Déjeuner", "Dîner", "Collation"];
+            document.getElementById("meal-slots-grid").innerHTML = slots.map(slot => {
+                const slotItems = items.filter(i => i.meal === slot);
+                const sKcal = Math.round(slotItems.reduce((s, i) => s + i.kcal, 0));
+                const sProt = slotItems.reduce((s, i) => s + i.p, 0).toFixed(1);
+                const sCarbs = slotItems.reduce((s, i) => s + i.c, 0).toFixed(1);
+
+                return `
+                    <div class="glass-card rounded-2xl p-4 space-y-3 border border-slate-800">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-white">${slot}</h3>
+                                <span class="text-[11px] text-slate-400">${sKcal} kcal • P:${sProt}g • G:${sCarbs}g</span>
+                            </div>
+                            <button onclick="openFoodModal('${slot}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition">+ Ajouter</button>
+                        </div>
+                        <div class="space-y-1.5">
+                            ${!slotItems.length
+                                ? `<p class="text-[11px] text-slate-500 py-3 text-center">Aucun aliment</p>`
+                                : slotItems.map(item => `
+                                    <div class="flex items-center justify-between text-xs bg-slate-950/75 px-3 py-2 rounded-xl border border-slate-800/70">
+                                        <div>
+                                            <span class="font-medium text-slate-200 block">${item.name} (${item.grams}g)</span>
+                                            <span class="text-[10px] text-slate-400">${item.kcal} kcal • P:${item.p}g G:${item.c}g L:${item.f}g</span>
+                                        </div>
+                                        <button onclick="removeLogItem('${item.id}')" class="text-slate-500 hover:text-rose-400 p-1">✕</button>
+                                    </div>
+                                `).join("")
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
         // =========================================================================
-        // 7. PHOTO IA (CAMÉRA + GALERIE) & MICRO CONTINU (SANS COUPURE)
+        // 7. SCAN PHOTO (CAMÉRA + GALERIE) & DICTÉE VOCALE CONTINUE
         // =========================================================================
         function handlePlateImageUpload(event) {
-            const file = event.target.files && event.target.files[0];
+            const file = event.target.files[0];
             if (!file) return;
             currentPlateMime = file.type || "image/jpeg";
             const reader = new FileReader();
@@ -1659,13 +1829,18 @@
 
         async function analyzePlatePhoto() {
             if (!currentPlateBase64) return;
+            if (!getStoredApiKey()) {
+                showToast("Configurez votre clé API Gemini dans l'onglet Profil pour analyser vos photos.", "error");
+                goToApiSettings();
+                return;
+            }
             const btn = document.getElementById("btn-analyze-photo");
             const orig = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `⏳ Analyse photo avec Gemini...`;
+            btn.innerHTML = `⏳ Analyse visuelle par Gemini...`;
 
-            const prompt = `Analyse cette photo d'assiette avec précision nutritionnelle.
-Identifie chaque aliment visible, estime son poids réaliste en grammes et calcule kcal, protéines (p), glucides (c) et lipides (f).
+            const prompt = `Analyse cette photo de repas avec précision nutritionnelle.
+Identifie chaque aliment visible dans l'assiette, estime son poids en grammes et calcule kcal, protéines (p), glucides (c) et lipides (f).
 Réponds UNIQUEMENT en JSON strict :
 {
   "dishTitle": "Nom du plat",
@@ -1685,21 +1860,15 @@ Réponds UNIQUEMENT en JSON strict :
                     generationConfig: { responseMimeType: "application/json" }
                 });
                 displayAiParsedResult(extractJsonFromText(resText));
-                showToast("Plat analysé avec succès !", "success");
+                showToast("Assiette analysée par Gemini !", "success");
             } catch (err) {
-                if (err.message === "NO_API_KEY") {
-                    showToast("Ajoutez votre clé API Gemini dans l'onglet Profil.", "error");
-                    goToApiSettings();
-                } else {
-                    showToast(`Erreur Gemini : ${err.message}`, "error");
-                }
+                showToast(`Erreur analyse photo : ${err.message}`, "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = orig;
             }
         }
 
-        // Dictée vocale continue (conserve le texte existant + relance auto pendant les blancs)
         let recognition = null;
         let isRecording = false;
         let shouldKeepListening = false;
@@ -1715,33 +1884,29 @@ Réponds UNIQUEMENT en JSON strict :
 
             recognition.onstart = () => {
                 isRecording = true;
-                const btn = document.getElementById("btn-mic");
-                btn.classList.add("pulse-mic", "bg-rose-500");
-                btn.classList.remove("bg-emerald-500");
-                const status = document.getElementById("mic-status");
-                status.textContent = "Écoute continue active... Appuyez pour arrêter";
-                status.classList.add("text-emerald-400");
+                document.getElementById("btn-mic").classList.add("pulse-mic", "bg-rose-500");
+                document.getElementById("btn-mic").classList.remove("bg-emerald-500");
+                document.getElementById("mic-status").textContent = "Écoute active... Appuyez sur le micro pour arrêter";
+                document.getElementById("mic-status").classList.add("text-emerald-400");
             };
 
             recognition.onresult = (e) => {
                 let finalChunk = "";
                 let interimChunk = "";
                 for (let i = e.resultIndex; i < e.results.length; i++) {
-                    const seg = e.results[i][0].transcript;
-                    if (e.results[i].isFinal) {
-                        finalChunk += seg + " ";
-                    } else {
-                        interimChunk += seg;
-                    }
+                    const piece = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) finalChunk += piece + " ";
+                    else interimChunk += piece;
                 }
                 if (finalChunk.trim()) {
-                    voiceBaseText = (voiceBaseText ? voiceBaseText.trim() + " " : "") + finalChunk.trim();
+                    voiceBaseText = (voiceBaseText ? voiceBaseText + " " : "") + finalChunk.trim();
                 }
-                const combined = [voiceBaseText.trim(), interimChunk.trim()].filter(Boolean).join(" ");
+                const combined = [voiceBaseText, interimChunk.trim()].filter(Boolean).join(" ");
                 document.getElementById("voice-transcript").value = combined;
             };
 
             recognition.onerror = (e) => {
+                if (e.error === "no-speech" && shouldKeepListening) return;
                 if (e.error === "not-allowed" || e.error === "service-not-allowed") {
                     shouldKeepListening = false;
                     isRecording = false;
@@ -1757,9 +1922,7 @@ Réponds UNIQUEMENT en JSON strict :
                     clearTimeout(voiceRestartTimer);
                     voiceRestartTimer = setTimeout(() => {
                         if (!shouldKeepListening) return;
-                        try {
-                            recognition.start();
-                        } catch {
+                        try { recognition.start(); } catch {
                             shouldKeepListening = false;
                             resetMicUI();
                         }
@@ -1810,44 +1973,55 @@ Réponds UNIQUEMENT en JSON strict :
         function localFallbackParseText(text) {
             const items = [];
             const lower = text.toLowerCase();
+            const findFood = (kw) => getAllFoods().find(f => f.name.toLowerCase().includes(kw));
             const map = [
-                { k: "poulet", f: DEFAULT_FOODS[0], g: 180 },
-                { k: "dinde", f: DEFAULT_FOODS[1], g: 180 },
-                { k: "steak", f: DEFAULT_FOODS[2], g: 150 },
-                { k: "saumon", f: DEFAULT_FOODS[3], g: 150 },
-                { k: "cabillaud", f: DEFAULT_FOODS[4], g: 180 },
-                { k: "thon", f: DEFAULT_FOODS[5], g: 140 },
-                { k: "crevette", f: DEFAULT_FOODS[6], g: 150 },
-                { k: "œuf", f: DEFAULT_FOODS[7], g: 120 },
-                { k: "oeuf", f: DEFAULT_FOODS[7], g: 120 },
-                { k: "skyr", f: DEFAULT_FOODS[9], g: 150 },
-                { k: "fromage blanc", f: DEFAULT_FOODS[10], g: 200 },
-                { k: "riz", f: DEFAULT_FOODS[13], g: 150 },
-                { k: "pâtes", f: DEFAULT_FOODS[15], g: 150 },
-                { k: "patate douce", f: DEFAULT_FOODS[16], g: 200 },
-                { k: "pomme de terre", f: DEFAULT_FOODS[17], g: 200 },
-                { k: "pain", f: DEFAULT_FOODS[18], g: 60 },
-                { k: "brocoli", f: DEFAULT_FOODS[21], g: 150 },
-                { k: "haricot", f: DEFAULT_FOODS[22], g: 150 },
-                { k: "courgette", f: DEFAULT_FOODS[23], g: 180 },
-                { k: "banane", f: DEFAULT_FOODS[26], g: 120 },
-                { k: "pomme", f: DEFAULT_FOODS[27], g: 150 },
-                { k: "avocat", f: DEFAULT_FOODS[29], g: 80 },
-                { k: "huile", f: DEFAULT_FOODS[30], g: 10 }
+                { k: "poulet", kw: "blanc de poulet", g: 180 },
+                { k: "dinde", kw: "escalope de dinde", g: 180 },
+                { k: "jambon", kw: "jambon blanc", g: 80 },
+                { k: "steak", kw: "steak haché 5%", g: 150 },
+                { k: "saumon", kw: "pavé de saumon", g: 150 },
+                { k: "cabillaud", kw: "cabillaud", g: 180 },
+                { k: "thon", kw: "thon au naturel", g: 140 },
+                { k: "crevette", kw: "crevettes", g: 150 },
+                { k: "œuf", kw: "œuf entier", g: 120 },
+                { k: "oeuf", kw: "œuf entier", g: 120 },
+                { k: "skyr", kw: "skyr", g: 150 },
+                { k: "fromage blanc", kw: "fromage blanc 0%", g: 200 },
+                { k: "wrap", kw: "wrap / tortilla complet", g: 60 },
+                { k: "tortilla", kw: "wrap / tortilla complet", g: 60 },
+                { k: "riz", kw: "riz basmati (cuit)", g: 150 },
+                { k: "pâtes", kw: "pâtes complètes", g: 150 },
+                { k: "patate douce", kw: "patate douce", g: 200 },
+                { k: "pomme de terre", kw: "pomme de terre", g: 200 },
+                { k: "pain", kw: "pain complet", g: 60 },
+                { k: "brocoli", kw: "brocoli", g: 150 },
+                { k: "haricot", kw: "haricots verts", g: 150 },
+                { k: "courgette", kw: "courgette", g: 180 },
+                { k: "tomate", kw: "tomate", g: 120 },
+                { k: "concombre", kw: "concombre", g: 120 },
+                { k: "salade", kw: "salade verte", g: 80 },
+                { k: "banane", kw: "banane", g: 120 },
+                { k: "pomme", kw: "pomme", g: 150 },
+                { k: "avocat", kw: "avocat", g: 80 },
+                { k: "huile", kw: "huile d'olive", g: 10 },
+                { k: "sauce yaourt", kw: "sauce yaourt", g: 40 },
+                { k: "houmous", kw: "houmous", g: 40 }
             ];
             map.forEach(entry => {
                 if (lower.includes(entry.k)) {
+                    const food = findFood(entry.kw);
+                    if (!food) return;
                     const rx = new RegExp(`(\\d+)\\s*(?:g|grammes?)\\s*(?:de|d')?\\s*${entry.k}`, "i");
                     const m = lower.match(rx);
                     const g = m ? parseInt(m[1]) : entry.g;
                     const r = g / 100;
                     items.push({
-                        name: entry.f.name,
+                        name: food.name,
                         grams: g,
-                        kcal: Math.round(entry.f.kcal * r),
-                        p: +(entry.f.p * r).toFixed(1),
-                        c: +(entry.f.c * r).toFixed(1),
-                        f: +(entry.f.f * r).toFixed(1)
+                        kcal: Math.round(food.kcal * r),
+                        p: +(food.p * r).toFixed(1),
+                        c: +(food.c * r).toFixed(1),
+                        f: +(food.f * r).toFixed(1)
                     });
                 }
             });
@@ -1984,8 +2158,162 @@ Réponds UNIQUEMENT en JSON strict :
         }
 
         // =========================================================================
-        // 8. PLANNING MULTI-JOURS DIVERSIFIÉ (FOUR / AIRFRYER) & GRILLE IMPRIMABLE
+        // 8. PLANNING MULTI-JOURS (ENVIES, EXCLUSIONS COMPLÈTES & GRILLE IMPRIMABLE)
         // =========================================================================
+        const PLAN_STYLES_LIST = [
+            { id: "Airfryer / Four", icon: "🔥", label: "Airfryer / Four" },
+            { id: "Wraps & Bowls", icon: "🌯", label: "Wraps & Bowls" },
+            { id: "Rapide (-15 min)", icon: "⚡", label: "Express (-15 min)" },
+            { id: "Salades & Frais", icon: "🥗", label: "Salades & Frais" },
+            { id: "Wok / Asiatique", icon: "🥢", label: "Wok & Asiatique" },
+            { id: "Méditerranéen", icon: "🫒", label: "Méditerranéen" },
+            { id: "Plats réconfortants", icon: "🍲", label: "Plats chauds" },
+            { id: "Épicé / Tex-Mex", icon: "🌶️", label: "Tex-Mex / Épicé" },
+            { id: "Batch-cooking", icon: "🥡", label: "Facile à réchauffer" },
+            { id: "Végétarien", icon: "🌱", label: "Végétarien" }
+        ];
+
+        const PLAN_EXCLUSIONS_GROUPS = [
+            {
+                group: "Viandes, Poissons & Œufs",
+                items: [
+                    { id: "porc", label: "Porc", kw: ["porc", "jambon", "bacon", "filet mignon"] },
+                    { id: "boeuf", label: "Bœuf", kw: ["bœuf", "boeuf", "steak"] },
+                    { id: "poulet", label: "Poulet", kw: ["poulet", "tenders", "aiguillettes"] },
+                    { id: "dinde", label: "Dinde", kw: ["dinde"] },
+                    { id: "saumon", label: "Saumon", kw: ["saumon"] },
+                    { id: "poisson_blanc", label: "Poisson blanc", kw: ["cabillaud", "colin", "poisson"] },
+                    { id: "thon", label: "Thon", kw: ["thon"] },
+                    { id: "crevettes", label: "Crevettes / Fruits de mer", kw: ["crevette", "fruits de mer"] },
+                    { id: "oeufs", label: "Œufs", kw: ["œuf", "oeuf", "omelette"] }
+                ]
+            },
+            {
+                group: "Laitiers, Gluten & Féculents",
+                items: [
+                    { id: "laitiers", label: "Produits laitiers / Lactose", kw: ["skyr", "fromage", "feta", "yaourt", "lait", "whey", "mozzarella"] },
+                    { id: "fromage", label: "Fromage", kw: ["feta", "fromage frais", "mozzarella", "emmental", "parmesan", "chèvre"] },
+                    { id: "gluten", label: "Gluten / Blé", kw: ["pain", "pâtes", "wrap", "tortilla", "chapelure", "farine", "nouilles"] },
+                    { id: "avoine", label: "Flocons d'avoine", kw: ["avoine", "oats"] },
+                    { id: "riz", label: "Riz", kw: ["riz"] },
+                    { id: "pates", label: "Pâtes", kw: ["pâtes", "nouilles"] },
+                    { id: "quinoa", label: "Quinoa", kw: ["quinoa"] },
+                    { id: "legumineuses", label: "Lentilles / Pois chiches", kw: ["lentilles", "pois chiches", "haricots rouges"] },
+                    { id: "patate_douce", label: "Patate douce", kw: ["patate douce"] },
+                    { id: "pomme_de_terre", label: "Pommes de terre", kw: ["pomme de terre", "pommes de terre", "grenailles"] }
+                ]
+            },
+            {
+                group: "Légumes, Fruits & Autres",
+                items: [
+                    { id: "brocoli", label: "Brocoli", kw: ["brocoli"] },
+                    { id: "epinards", label: "Épinards", kw: ["épinard"] },
+                    { id: "courgette", label: "Courgette", kw: ["courgette"] },
+                    { id: "aubergine", label: "Aubergine", kw: ["aubergine"] },
+                    { id: "champignons", label: "Champignons", kw: ["champignon"] },
+                    { id: "poivrons", label: "Poivrons", kw: ["poivron"] },
+                    { id: "tomates", label: "Tomates", kw: ["tomate"] },
+                    { id: "avocat", label: "Avocat", kw: ["avocat"] },
+                    { id: "banane", label: "Banane", kw: ["banane"] },
+                    { id: "fruits_rouges", label: "Fruits rouges", kw: ["myrtille", "fruits rouges", "fraise"] },
+                    { id: "oleagineux", label: "Noix / Amandes / Cacahuètes", kw: ["amande", "noix", "cacahuète"] },
+                    { id: "soja", label: "Soja / Tofu", kw: ["soja", "tofu"] },
+                    { id: "epices_fortes", label: "Épices fortes / Curry", kw: ["curry", "sriracha", "piment", "tex-mex"] }
+                ]
+            }
+        ];
+
+        let exclusionsExpanded = true;
+
+        function ensurePlanPrefs() {
+            if (!appState.planPreferences) {
+                appState.planPreferences = { styles: ["Airfryer / Four"], exclusions: [] };
+            }
+            return appState.planPreferences;
+        }
+
+        function togglePlanStyle(styleId) {
+            const prefs = ensurePlanPrefs();
+            const idx = prefs.styles.indexOf(styleId);
+            if (idx >= 0) prefs.styles.splice(idx, 1);
+            else prefs.styles.push(styleId);
+            saveState();
+            renderPlanPreferencesUI();
+        }
+
+        function togglePlanExclusion(exclId) {
+            const prefs = ensurePlanPrefs();
+            const idx = prefs.exclusions.indexOf(exclId);
+            if (idx >= 0) prefs.exclusions.splice(idx, 1);
+            else prefs.exclusions.push(exclId);
+            saveState();
+            renderPlanPreferencesUI();
+        }
+
+        function clearAllExclusions() {
+            const prefs = ensurePlanPrefs();
+            prefs.exclusions = [];
+            saveState();
+            renderPlanPreferencesUI();
+            showToast("Toutes les exclusions ont été effacées.", "info");
+        }
+
+        function toggleExclusionsPanel() {
+            exclusionsExpanded = !exclusionsExpanded;
+            document.getElementById("plan-exclusions-container").classList.toggle("hidden", !exclusionsExpanded);
+            document.getElementById("exclusions-chevron").textContent = exclusionsExpanded ? "▼" : "▶";
+        }
+
+        function renderPlanPreferencesUI() {
+            const prefs = ensurePlanPrefs();
+            const stylesBox = document.getElementById("plan-styles-chips");
+            const exclBox = document.getElementById("plan-exclusions-container");
+            if (!stylesBox || !exclBox) return;
+
+            document.getElementById("plan-styles-count").textContent = `${prefs.styles.length} sélectionné(s)`;
+            document.getElementById("plan-exclusions-count").textContent = `${prefs.exclusions.length} exclu(s)`;
+
+            stylesBox.innerHTML = PLAN_STYLES_LIST.map(s => {
+                const active = prefs.styles.includes(s.id);
+                return `
+                    <button type="button" onclick="togglePlanStyle('${s.id}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border transition flex items-center gap-1 ${active ? "bg-emerald-500/20 border-emerald-400 text-emerald-300" : "bg-slate-900 border-slate-700 text-slate-400 hover:text-white"}">
+                        <span>${s.icon}</span><span>${s.label}</span>
+                    </button>
+                `;
+            }).join("");
+
+            exclBox.innerHTML = PLAN_EXCLUSIONS_GROUPS.map(grp => `
+                <div class="space-y-1.5">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${grp.group}</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${grp.items.map(it => {
+                            const excluded = prefs.exclusions.includes(it.id);
+                            return `
+                                <button type="button" onclick="togglePlanExclusion('${it.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${excluded ? "bg-rose-500/20 border-rose-500 text-rose-300 line-through" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600"}">
+                                    ${excluded ? "✕ " : ""}${it.label}
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function getExcludedLabelsAndKeywords() {
+            const prefs = ensurePlanPrefs();
+            const labels = [];
+            const keywords = [];
+            PLAN_EXCLUSIONS_GROUPS.forEach(g => {
+                g.items.forEach(it => {
+                    if (prefs.exclusions.includes(it.id)) {
+                        labels.push(it.label);
+                        keywords.push(...it.kw);
+                    }
+                });
+            });
+            return { labels, keywords };
+        }
+
         function getCalibratedPlanTargets() {
             if (appState.profile && appState.profile.calc) return appState.profile.calc;
             return { targetKcal: 1850, targetProt: 145, targetCarbs: 155, targetFats: 60 };
@@ -2000,60 +2328,80 @@ Réponds UNIQUEMENT en JSON strict :
             return copy;
         }
 
-        function buildDiversifiedLocalPlan(daysCount, structure, targets, prioritizeAirfryer) {
+        function buildDiversifiedLocalPlan(daysCount, structure, targets, selectedStyles, excludedKeywords) {
             const hasSnack = structure === "3_with_snack";
             const bank = {
                 breakfast: [
-                    { title: "Muffins salés œufs-épinards & feta au Four", airfryer: true, prepTime: "18 min", ing: (p, c) => [`${Math.max(2, Math.round(p / 7))} œufs entiers + 100g blancs d'œufs`, `80g d'épinards frais + 25g feta légère`, `${Math.round(c * 2.1)}g pain complet`], steps: ["Préchauffer le four ou l'Airfryer à 180°C.", "Battre les œufs avec les épinards hachés et la feta dans des moules en silicone.", "Cuire 14 min à 180°C et déguster avec le pain complet."] },
-                    { title: "Baked Oats protéiné pomme-cannelle à l'Airfryer", airfryer: true, prepTime: "15 min", ing: (p, c) => [`${Math.round(c * 1.3)}g flocons d'avoine`, `30g Whey vanille + 100g Skyr 0%`, `100g pomme en dés + cannelle`], steps: ["Mélanger avoine, Whey, Skyr et 60ml d'eau dans un ramequin.", "Ajouter les dés de pomme et la cannelle.", "Cuire 12 min à 175°C à l'Airfryer (ou 18 min au four)."] },
-                    { title: "Omelette fines herbes & pain complet grillé", airfryer: false, prepTime: "10 min", ing: (p, c) => [`${Math.max(2, Math.round(p / 7))} œufs + 100g blancs d'œufs`, `${Math.round(c * 2.2)}g pain complet`, `5g huile d'olive, ciboulette`], steps: ["Battre les œufs avec les herbes.", "Cuire 3-4 min à la poêle.", "Servir avec le pain complet grillé."] },
-                    { title: "Bowl Skyr 0%, myrtilles & amandes", airfryer: false, prepTime: "5 min", ing: (p, c) => [`${Math.round(p * 8.5)}g Skyr 0%`, `${Math.round(c * 4.5)}g myrtilles / fruits rouges`, `15g amandes concassées`], steps: ["Verser le Skyr dans un bol.", "Ajouter les fruits rouges et les amandes concassées."] },
-                    { title: "Tartines avocat, œuf mollet & filet de dinde", airfryer: false, prepTime: "10 min", ing: (p, c) => [`2 œufs + 80g blanc de dinde`, `${Math.round(c * 2.1)}g pain complet`, `50g avocat citronné`], steps: ["Cuire les œufs 6 min dans l'eau bouillante.", "Tartiner l'avocat sur le pain grillé et ajouter dinde et œufs."] },
-                    { title: "Pancakes express banane-œufs & fromage blanc 0%", airfryer: false, prepTime: "12 min", ing: (p, c) => [`2 œufs + ${Math.round(p * 7)}g fromage blanc 0%`, `${Math.round(c * 3.8)}g banane écrasée`, `20g farine complète`], steps: ["Mixer œufs, banane et farine.", "Cuire en petits pancakes 2 min par face et servir avec le fromage blanc."] },
-                    { title: "Œufs cocotte tomates cerises & basilic au Four", airfryer: true, prepTime: "15 min", ing: (p, c) => [`3 œufs + 80g jambon de dinde`, `100g tomates cerises`, `${Math.round(c * 2.1)}g pain complet`], steps: ["Déposer tomates et dinde dans un ramequin, casser les œufs par-dessus.", "Cuire 11 min à 180°C au four ou Airfryer."] }
+                    { title: "Muffins salés œufs-épinards & feta au Four", styles: ["Airfryer / Four", "Batch-cooking", "Végétarien"], prepTime: "18 min", ing: (p, c) => [`${Math.max(2, Math.round(p / 7))} œufs entiers + 100g blancs d'œufs`, `80g d'épinards frais + 25g feta légère`, `${Math.round(c * 2.1)}g pain complet`], steps: ["Préchauffer le four ou l'Airfryer à 180°C.", "Battre les œufs avec les épinards hachés et la feta dans des moules en silicone.", "Cuire 14 min à 180°C et déguster avec le pain complet."] },
+                    { title: "Wrap matinal œufs brouillés, filet de dinde & salade", styles: ["Wraps & Bowls", "Rapide (-15 min)"], prepTime: "8 min", ing: (p, c) => [`1 wrap complet (60g)`, `2 œufs + 70g blanc de dinde`, `30g roquette + 1 c.à.c moutarde douce`], steps: ["Brouiller les œufs 3 min à la poêle.", "Garnir le wrap avec moutarde, roquette, dinde et œufs chauds, puis rouler."] },
+                    { title: "Baked Oats protéiné pomme-cannelle à l'Airfryer", styles: ["Airfryer / Four", "Végétarien"], prepTime: "15 min", ing: (p, c) => [`${Math.round(c * 1.3)}g flocons d'avoine`, `30g Whey vanille + 100g Skyr 0%`, `100g pomme en dés + cannelle`], steps: ["Mélanger avoine, Whey, Skyr et 60ml d'eau dans un ramequin.", "Ajouter les dés de pomme et la cannelle.", "Cuire 12 min à 175°C à l'Airfryer (ou 18 min au four)."] },
+                    { title: "Omelette fines herbes & pain complet grillé", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "10 min", ing: (p, c) => [`${Math.max(2, Math.round(p / 7))} œufs + 100g blancs d'œufs`, `${Math.round(c * 2.2)}g pain complet`, `5g huile d'olive, ciboulette`], steps: ["Battre les œufs avec les herbes.", "Cuire 3-4 min à la poêle.", "Servir avec le pain complet grillé."] },
+                    { title: "Bowl Skyr 0%, myrtilles & amandes", styles: ["Wraps & Bowls", "Rapide (-15 min)", "Salades & Frais", "Végétarien"], prepTime: "5 min", ing: (p, c) => [`${Math.round(p * 8.5)}g Skyr 0%`, `${Math.round(c * 4.5)}g myrtilles / fruits rouges`, `15g amandes concassées`], steps: ["Verser le Skyr dans un bol.", "Ajouter les fruits rouges et les amandes concassées."] },
+                    { title: "Tartines avocat, œuf mollet & filet de dinde", styles: ["Rapide (-15 min)", "Salades & Frais"], prepTime: "10 min", ing: (p, c) => [`2 œufs + 80g blanc de dinde`, `${Math.round(c * 2.1)}g pain complet`, `50g avocat citronné`], steps: ["Cuire les œufs 6 min dans l'eau bouillante.", "Tartiner l'avocat sur le pain grillé et ajouter dinde et œufs."] },
+                    { title: "Pancakes express banane-œufs & fromage blanc 0%", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "12 min", ing: (p, c) => [`2 œufs + ${Math.round(p * 7)}g fromage blanc 0%`, `${Math.round(c * 3.8)}g banane écrasée`, `20g farine complète`], steps: ["Mixer œufs, banane et farine.", "Cuire en petits pancakes 2 min par face et servir avec le fromage blanc."] },
+                    { title: "Œufs cocotte tomates cerises & basilic au Four", styles: ["Airfryer / Four", "Méditerranéen"], prepTime: "15 min", ing: (p, c) => [`3 œufs + 80g jambon de dinde`, `100g tomates cerises`, `${Math.round(c * 2.1)}g pain complet`], steps: ["Déposer tomates et dinde dans un ramequin, casser les œufs par-dessus.", "Cuire 11 min à 180°C au four ou Airfryer."] },
+                    { title: "Porridge express de riz, poire & beurre de cacahuète", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "8 min", ing: (p, c) => [`${Math.round(c * 1.4)}g crème de riz ou flocons`, `30g protéine végétale ou Whey`, `1 poire + 10g beurre de cacahuète`], steps: ["Chauffer la crème de riz avec 200ml d'eau.", "Incorporer la protéine, la poire en dés et le beurre de cacahuète."] }
                 ],
                 lunch: [
-                    { title: "Aiguillettes de poulet croustillantes & frites de patate douce à l'Airfryer", airfryer: true, prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en aiguillettes`, `${Math.round(c * 4.8)}g patate douce en bâtonnets`, `180g haricots verts`, `8g huile d'olive, paprika fumé`], steps: ["Enrober la patate douce de la moitié de l'huile et du paprika, cuire 12 min à 195°C à l'Airfryer.", "Ajouter les aiguillettes épicées et prolonger 8 min à 190°C en secouant à mi-cuisson.", "Servir avec les haricots verts."] },
-                    { title: "Pavé de saumon citron-gingembre & brocolis rôtis au Four", airfryer: true, prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 4.5)}g pavé de saumon`, `${Math.round(c * 3.4)}g riz basmati cuit`, `200g brocolis`, `5g huile d'olive, citron, gingembre`], steps: ["Disposer saumon et brocolis sur une plaque avec citron et gingembre.", "Enfourner 15 min à 190°C (ou 12 min à l'Airfryer à 185°C).", "Servir avec le riz basmati."] },
-                    { title: "Boulettes de dinde aux herbes & pommes grenailles à l'Airfryer", airfryer: true, prepTime: "22 min", ing: (p, c) => [`${Math.round(p * 3.4)}g dinde hachée`, `${Math.round(c * 5.2)}g pommes de terre grenailles`, `180g courgettes`, `8g huile d'olive, thym, ail`], steps: ["Former des boulettes de dinde avec ail et thym.", "Cuire les grenailles coupées en deux 12 min à 195°C à l'Airfryer.", "Ajouter boulettes et courgettes pour 10 min à 185°C."] },
-                    { title: "Brochettes poulet-poivrons marinées au curry & quinoa (Airfryer)", airfryer: true, prepTime: "18 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en cubes`, `${Math.round(c * 4.5)}g quinoa cuit`, `180g poivrons tricolores`, `8g huile d'olive, curry doux`], steps: ["Monter les brochettes poulet-poivrons marinées au curry.", "Cuire 13 min à 190°C à l'Airfryer (retourner à mi-cuisson).", "Servir sur lit de quinoa."] },
-                    { title: "Steak haché 5% MG, lentilles vertes & carottes rôties au Four", airfryer: true, prepTime: "22 min", ing: (p, c) => [`${Math.round(p * 4.4)}g steak haché 5% MG`, `${Math.round(c * 4.6)}g lentilles vertes cuites`, `180g carottes en bâtonnets`, `8g huile d'olive, cumin`], steps: ["Rôtir les carottes au cumin 18 min à 200°C au four.", "Saisir le steak 5% 3 min par face et servir avec les lentilles chaudes."] },
-                    { title: "Poivrons farcis au bœuf maigre 5% & riz complet au Four", airfryer: true, prepTime: "28 min", ing: (p, c) => [`${Math.round(p * 4.4)}g bœuf haché 5%`, `${Math.round(c * 3.4)}g riz cuit`, `2 poivrons moyens + coulis tomate`], steps: ["Mélanger bœuf, riz et coulis de tomate.", "Farcir les demi-poivrons et cuire 22 min à 190°C au four (ou 16 min Airfryer)."] },
-                    { title: "Tenders de poulet healthy au paprika & purée de patate douce (Airfryer)", airfryer: true, prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.2)}g poulet + 20g chapelure complète`, `${Math.round(c * 4.8)}g patate douce`, `180g haricots verts`], steps: ["Passer le poulet dans un peu de blanc d'œuf puis chapelure-paprika.", "Cuire 12 min à 195°C à l'Airfryer et servir avec la patate douce écrasée."] },
-                    { title: "Filet mignon de porc moutarde-miel léger & légumes rôtis au Four", airfryer: true, prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.8)}g filet mignon maigre`, `${Math.round(c * 5.0)}g pommes de terre`, `200g courgettes & oignons`, `1 c.à.c moutarde`], steps: ["Badigeonner le filet mignon de moutarde et d'herbes.", "Enfourner avec les légumes 22 min à 195°C."] },
-                    { title: "Wok de crevettes ail-gingembre, nouilles complètes & brocolis", airfryer: false, prepTime: "15 min", ing: (p, c) => [`${Math.round(p * 4.1)}g crevettes décortiquées`, `${Math.round(c * 3.8)}g pâtes/nouilles complètes cuites`, `180g brocolis`, `8g huile d'olive, sauce soja`], steps: ["Saisir les brocolis et crevettes au wok 5 min avec ail et gingembre.", "Ajouter les nouilles cuites et 1 c.à.s de sauce soja légère."] }
+                    { title: "Wrap croustillant poulet grillé, sauce yaourt & crudités (Airfryer)", styles: ["Wraps & Bowls", "Airfryer / Four", "Rapide (-15 min)"], prepTime: "14 min", ing: (p, c) => [`1 grand wrap complet (60g)`, `${Math.round(p * 3.1)}g blanc de poulet`, `120g salade, tomate, concombre`, `40g sauce yaourt-citron-ciboulette`], steps: ["Cuire les lanières de poulet 8 min à 195°C à l'Airfryer.", "Tartiner le wrap de sauce yaourt, garnir de crudités et poulet, puis rouler."] },
+                    { title: "Aiguillettes de poulet croustillantes & frites de patate douce à l'Airfryer", styles: ["Airfryer / Four", "Plats réconfortants"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en aiguillettes`, `${Math.round(c * 4.8)}g patate douce en bâtonnets`, `180g haricots verts`, `8g huile d'olive, paprika fumé`], steps: ["Enrober la patate douce de la moitié de l'huile et du paprika, cuire 12 min à 195°C à l'Airfryer.", "Ajouter les aiguillettes épicées et prolonger 8 min à 190°C en secouant à mi-cuisson.", "Servir avec les haricots verts."] },
+                    { title: "Poke Bowl saumon mariné, riz basmati, concombre & carottes", styles: ["Wraps & Bowls", "Salades & Frais", "Wok / Asiatique"], prepTime: "15 min", ing: (p, c) => [`${Math.round(p * 4.4)}g pavé de saumon (cru ou Airfryer)`, `${Math.round(c * 3.4)}g riz basmati cuit`, `180g concombre & carottes râpées`, `1 c.à.s sauce soja + sésame`], steps: ["Disposer le riz tiède dans un grand bol.", "Ajouter les légumes croquants, le saumon en dés et arroser de sauce soja."] },
+                    { title: "Pavé de saumon citron-gingembre & brocolis rôtis au Four", styles: ["Airfryer / Four", "Méditerranéen"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 4.5)}g pavé de saumon`, `${Math.round(c * 3.4)}g riz basmati cuit`, `200g brocolis`, `5g huile d'olive, citron, gingembre`], steps: ["Disposer saumon et brocolis sur une plaque avec citron et gingembre.", "Enfourner 15 min à 190°C (ou 12 min à l'Airfryer à 185°C).", "Servir avec le riz basmati."] },
+                    { title: "Boulettes de dinde aux herbes & pommes grenailles à l'Airfryer", styles: ["Airfryer / Four", "Batch-cooking", "Plats réconfortants"], prepTime: "22 min", ing: (p, c) => [`${Math.round(p * 3.4)}g dinde hachée`, `${Math.round(c * 5.2)}g pommes de terre grenailles`, `180g courgettes`, `8g huile d'olive, thym, ail`], steps: ["Former des boulettes de dinde avec ail et thym.", "Cuire les grenailles coupées en deux 12 min à 195°C à l'Airfryer.", "Ajouter boulettes et courgettes pour 10 min à 185°C."] },
+                    { title: "Wrap Tex-Mex bœuf 5% épicé, poivrons & haricots rouges", styles: ["Wraps & Bowls", "Épicé / Tex-Mex", "Rapide (-15 min)"], prepTime: "15 min", ing: (p, c) => [`1 wrap complet (60g)`, `${Math.round(p * 4.2)}g steak haché 5% MG`, `80g poivrons + 60g haricots rouges`, `Epices chili doux, coriandre`], steps: ["Faire revenir le bœuf émietté avec poivrons, haricots rouges et épices 7 min.", "Garnir le wrap et passer 2 min à l'Airfryer pour le dorer."] },
+                    { title: "Brochettes poulet-poivrons marinées au curry & quinoa (Airfryer)", styles: ["Airfryer / Four", "Épicé / Tex-Mex"], prepTime: "18 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet en cubes`, `${Math.round(c * 4.5)}g quinoa cuit`, `180g poivrons tricolores`, `8g huile d'olive, curry doux`], steps: ["Monter les brochettes poulet-poivrons marinées au curry.", "Cuire 13 min à 190°C à l'Airfryer (retourner à mi-cuisson).", "Servir sur lit de quinoa."] },
+                    { title: "Steak haché 5% MG, lentilles vertes & carottes rôties au Four", styles: ["Airfryer / Four", "Plats réconfortants", "Batch-cooking"], prepTime: "22 min", ing: (p, c) => [`${Math.round(p * 4.4)}g steak haché 5% MG`, `${Math.round(c * 4.6)}g lentilles vertes cuites`, `180g carottes en bâtonnets`, `8g huile d'olive, cumin`], steps: ["Rôtir les carottes au cumin 18 min à 200°C au four.", "Saisir le steak 5% 3 min par face et servir avec les lentilles chaudes."] },
+                    { title: "Poivrons farcis au bœuf maigre 5% & riz complet au Four", styles: ["Airfryer / Four", "Méditerranéen", "Batch-cooking"], prepTime: "28 min", ing: (p, c) => [`${Math.round(p * 4.4)}g bœuf haché 5%`, `${Math.round(c * 3.4)}g riz cuit`, `2 poivrons moyens + coulis tomate`], steps: ["Mélanger bœuf, riz et coulis de tomate.", "Farcir les demi-poivrons et cuire 22 min à 190°C au four (ou 16 min Airfryer)."] },
+                    { title: "Tenders de poulet healthy au paprika & purée de patate douce (Airfryer)", styles: ["Airfryer / Four", "Plats réconfortants"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.2)}g poulet + 20g chapelure complète`, `${Math.round(c * 4.8)}g patate douce`, `180g haricots verts`], steps: ["Passer le poulet dans un peu de blanc d'œuf puis chapelure-paprika.", "Cuire 12 min à 195°C à l'Airfryer et servir avec la patate douce écrasée."] },
+                    { title: "Filet mignon de porc moutarde-miel léger & légumes rôtis au Four", styles: ["Airfryer / Four", "Plats réconfortants"], prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.8)}g filet mignon maigre`, `${Math.round(c * 5.0)}g pommes de terre`, `200g courgettes & oignons`, `1 c.à.c moutarde`], steps: ["Badigeonner le filet mignon de moutarde et d'herbes.", "Enfourner avec les légumes 22 min à 195°C."] },
+                    { title: "Wok de crevettes ail-gingembre, nouilles complètes & brocolis", styles: ["Wok / Asiatique", "Rapide (-15 min)"], prepTime: "15 min", ing: (p, c) => [`${Math.round(p * 4.1)}g crevettes décortiquées`, `${Math.round(c * 3.8)}g pâtes/nouilles complètes cuites`, `180g brocolis`, `8g huile d'olive, sauce soja`], steps: ["Saisir les brocolis et crevettes au wok 5 min avec ail et gingembre.", "Ajouter les nouilles cuites et 1 c.à.s de sauce soja légère."] },
+                    { title: "Bowl méditerranéen pois chiches rôtis, tofu grillé & légumes au Four", styles: ["Wraps & Bowls", "Airfryer / Four", "Méditerranéen", "Végétarien"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 6.5)}g tofu ferme en cubes`, `${Math.round(c * 4.5)}g pois chiches cuits`, `180g courgettes & poivrons`, `10g huile d'olive, herbes de Provence`], steps: ["Rôtir tofu, pois chiches et légumes 15 min à 195°C à l'Airfryer.", "Servir en bowl avec un filet de citron."] }
                 ],
                 dinner: [
-                    { title: "Dos de cabillaud en croûte d'herbes & tomates rôties à l'Airfryer", airfryer: true, prepTime: "16 min", ing: (p, c) => [`${Math.round(p * 5.2)}g dos de cabillaud`, `${Math.round(c * 5.2)}g pommes de terre vapeur`, `200g tomates cerises & courgettes`, `8g huile d'olive, persil, citron`], steps: ["Badigeonner le cabillaud d'herbes et citron.", "Cuire 10 min à 185°C à l'Airfryer avec les tomates cerises.", "Servir avec les pommes de terre."] },
-                    { title: "Courgettes farcies au thon, fromage frais & herbes au Four", airfryer: true, prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.7)}g thon au naturel`, `${Math.round(c * 3.3)}g riz basmati cuit`, `2 courgettes évidées + 40g fromage frais 0%`], steps: ["Mélanger chair de courgette, thon, riz et fromage frais.", "Garnir les courgettes et enfourner 20 min à 190°C."] },
-                    { title: "Crevettes rôties ail-persil & poêlée d'épinards à l'Airfryer", airfryer: true, prepTime: "14 min", ing: (p, c) => [`${Math.round(p * 4.1)}g crevettes décortiquées`, `${Math.round(c * 4.5)}g quinoa cuit`, `220g épinards frais`, `8g huile d'olive, ail, persil`], steps: ["Cuire les crevettes ail-persil 6 min à 190°C à l'Airfryer.", "Faire tomber les épinards 2 min et dresser avec le quinoa."] },
-                    { title: "Escalope de dinde gratinée tomate-basilic & haricots verts au Four", airfryer: true, prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.4)}g escalope de dinde`, `${Math.round(c * 3.4)}g pâtes complètes cuites`, `180g haricots verts + coulis tomate`], steps: ["Napper la dinde de coulis tomate et basilic.", "Cuire 15 min à 190°C au four (ou 11 min Airfryer) et servir avec les pâtes."] },
-                    { title: "Aubergine rôtie miso-citron & émincé de poulet au Four", airfryer: true, prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet`, `${Math.round(c * 3.4)}g riz basmati cuit`, `1 grosse aubergine`, `8g huile d'olive, citron`], steps: ["Quadriller l'aubergine et la rôtir 20 min à 200°C au four.", "Cuire le poulet en parallèle et servir avec le riz."] },
-                    { title: "Papillote de colin aux petits légumes & patate douce au Four", airfryer: true, prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 5.2)}g filet de colin`, `${Math.round(c * 4.8)}g patate douce en dés`, `180g julienne de légumes`, `8g huile d'olive, aneth`], steps: ["Placer poisson, légumes et aneth en papillote.", "Enfourner 16 min à 190°C avec les dés de patate douce."] },
-                    { title: "Omelette soufflée champignons-épinards & salade croquante", airfryer: false, prepTime: "12 min", ing: (p, c) => [`3 œufs + 120g blancs d'œufs`, `${Math.round(c * 2.1)}g pain complet`, `180g champignons & épinards`], steps: ["Poêler les champignons et épinards 4 min.", "Verser les œufs battus et cuire 4 min à feu doux."] }
+                    { title: "Dos de cabillaud en croûte d'herbes & tomates rôties à l'Airfryer", styles: ["Airfryer / Four", "Méditerranéen"], prepTime: "16 min", ing: (p, c) => [`${Math.round(p * 5.2)}g dos de cabillaud`, `${Math.round(c * 5.2)}g pommes de terre vapeur`, `200g tomates cerises & courgettes`, `8g huile d'olive, persil, citron`], steps: ["Badigeonner le cabillaud d'herbes et citron.", "Cuire 10 min à 185°C à l'Airfryer avec les tomates cerises.", "Servir avec les pommes de terre."] },
+                    { title: "Wrap fraîcheur au thon, concombre, maïs & fromage frais 0%", styles: ["Wraps & Bowls", "Salades & Frais", "Rapide (-15 min)"], prepTime: "7 min", ing: (p, c) => [`1 wrap complet (60g)`, `${Math.round(p * 3.6)}g thon au naturel`, `120g concombre & salade verte`, `40g fromage frais léger + ciboulette`], steps: ["Mélanger le thon émietté avec le fromage frais et la ciboulette.", "Étaler sur le wrap avec le concombre et la salade, puis rouler serré."] },
+                    { title: "Courgettes farcies au thon, fromage frais & herbes au Four", styles: ["Airfryer / Four", "Méditerranéen"], prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.7)}g thon au naturel`, `${Math.round(c * 3.3)}g riz basmati cuit`, `2 courgettes évidées + 40g fromage frais 0%`], steps: ["Mélanger chair de courgette, thon, riz et fromage frais.", "Garnir les courgettes et enfourner 20 min à 190°C."] },
+                    { title: "Crevettes rôties ail-persil & poêlée d'épinards à l'Airfryer", styles: ["Airfryer / Four", "Rapide (-15 min)"], prepTime: "14 min", ing: (p, c) => [`${Math.round(p * 4.1)}g crevettes décortiquées`, `${Math.round(c * 4.5)}g quinoa cuit`, `220g épinards frais`, `8g huile d'olive, ail, persil`], steps: ["Cuire les crevettes ail-persil 6 min à 190°C à l'Airfryer.", "Faire tomber les épinards 2 min et dresser avec le quinoa."] },
+                    { title: "Escalope de dinde gratinée tomate-basilic & haricots verts au Four", styles: ["Airfryer / Four", "Méditerranéen", "Batch-cooking"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 3.4)}g escalope de dinde`, `${Math.round(c * 3.4)}g pâtes complètes cuites`, `180g haricots verts + coulis tomate`], steps: ["Napper la dinde de coulis tomate et basilic.", "Cuire 15 min à 190°C au four (ou 11 min Airfryer) et servir avec les pâtes."] },
+                    { title: "Salade César healthy au poulet grillé & croûtons de pain complet", styles: ["Salades & Frais", "Rapide (-15 min)"], prepTime: "12 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet grillé`, `180g salade romaine & tomates cerises`, `${Math.round(c * 2.0)}g pain complet en dés grillés`, `40g sauce yaourt-citron-moutarde`], steps: ["Griller les dés de pain 4 min à l'Airfryer.", "Assembler salade, tomates, poulet tiède, croûtons et sauce yaourt."] },
+                    { title: "Aubergine rôtie citron & émincé de poulet au Four", styles: ["Airfryer / Four", "Méditerranéen"], prepTime: "25 min", ing: (p, c) => [`${Math.round(p * 3.2)}g blanc de poulet`, `${Math.round(c * 3.4)}g riz basmati cuit`, `1 grosse aubergine`, `8g huile d'olive, citron`], steps: ["Quadriller l'aubergine et la rôtir 20 min à 200°C au four.", "Cuire le poulet en parallèle et servir avec le riz."] },
+                    { title: "Papillote de colin aux petits légumes & patate douce au Four", styles: ["Airfryer / Four", "Batch-cooking"], prepTime: "20 min", ing: (p, c) => [`${Math.round(p * 5.2)}g filet de colin`, `${Math.round(c * 4.8)}g patate douce en dés`, `180g carottes & poireaux`, `8g huile d'olive, aneth`], steps: ["Placer poisson, légumes et aneth en papillote.", "Enfourner 16 min à 190°C avec les dés de patate douce."] },
+                    { title: "Wok de dinde aux champignons, courgettes & sauce soja", styles: ["Wok / Asiatique", "Rapide (-15 min)"], prepTime: "14 min", ing: (p, c) => [`${Math.round(p * 3.4)}g émincé de dinde`, `${Math.round(c * 3.4)}g riz basmati cuit`, `200g champignons & courgettes`, `1 c.à.s sauce soja + 5g huile d'olive`], steps: ["Saisir la dinde et les légumes au wok à feu vif pendant 8 min.", "Déglacer à la sauce soja et servir avec le riz."] },
+                    { title: "Omelette soufflée champignons-épinards & salade croquante", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "12 min", ing: (p, c) => [`3 œufs + 120g blancs d'œufs`, `${Math.round(c * 2.1)}g pain complet`, `180g champignons & épinards`], steps: ["Poêler les champignons et épinards 4 min.", "Verser les œufs battus et cuire 4 min à feu doux."] }
                 ],
                 snack: [
-                    { title: "Pomme rôtie à la cannelle & Skyr 0% (Airfryer)", airfryer: true, prepTime: "12 min", ing: (p, c) => [`${Math.round(p * 9)}g Skyr 0%`, `1 pomme coupée en quartiers + cannelle`, `10g amandes`], steps: ["Cuire les quartiers de pomme à la cannelle 10 min à 180°C à l'Airfryer.", "Servir tiède sur le Skyr 0% bien frais avec les amandes."] },
-                    { title: "Muffin express banane-cacao protéiné à l'Airfryer", airfryer: true, prepTime: "12 min", ing: (p, c) => [`25g Whey chocolat + 1 œuf`, `60g banane écrasée`, `15g flocons d'avoine`], steps: ["Mélanger tous les ingrédients dans un ramequin.", "Cuire 10 min à 175°C à l'Airfryer."] },
-                    { title: "Fromage blanc 0%, fruits rouges & amandes", airfryer: false, prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 11)}g fromage blanc 0%`, `100g fruits rouges`, `15g amandes`], steps: ["Mélanger le fromage blanc avec les fruits rouges et les amandes."] },
-                    { title: "Shaker Whey Isolate & banane", airfryer: false, prepTime: "2 min", ing: (p, c) => [`${Math.round(p * 1.15)}g Whey Isolate`, `1 banane moyenne`], steps: ["Mélanger la Whey avec 250ml d'eau fraîche et déguster avec la banane."] },
-                    { title: "Poire fraîche, Skyr 0% & beurre de cacahuète", airfryer: false, prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 9)}g Skyr 0%`, `1 poire en dés`, `10g beurre de cacahuète 100%`], steps: ["Mélanger la poire au Skyr et ajouter un filet de beurre de cacahuète."] },
-                    { title: "Pain complet, filet de dinde & concombre", airfryer: false, prepTime: "3 min", ing: (p, c) => [`70g blanc de dinde`, `40g pain complet`, `80g concombre`], steps: ["Assembler une tartine protéinée salée avec le concombre croquant."] },
-                    { title: "Fromage blanc 0%, kiwi & noix", airfryer: false, prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 11)}g fromage blanc 0%`, `1 kiwi en tranches`, `12g cerneaux de noix`], steps: ["Disposer le kiwi et les noix sur le fromage blanc."] }
+                    { title: "Pomme rôtie à la cannelle & Skyr 0% (Airfryer)", styles: ["Airfryer / Four", "Végétarien"], prepTime: "12 min", ing: (p, c) => [`${Math.round(p * 9)}g Skyr 0%`, `1 pomme coupée en quartiers + cannelle`, `10g amandes`], steps: ["Cuire les quartiers de pomme à la cannelle 10 min à 180°C à l'Airfryer.", "Servir tiède sur le Skyr 0% bien frais avec les amandes."] },
+                    { title: "Muffin express banane-cacao protéiné à l'Airfryer", styles: ["Airfryer / Four", "Végétarien"], prepTime: "12 min", ing: (p, c) => [`25g Whey chocolat + 1 œuf`, `60g banane écrasée`, `15g flocons d'avoine`], steps: ["Mélanger tous les ingrédients dans un ramequin.", "Cuire 10 min à 175°C à l'Airfryer."] },
+                    { title: "Fromage blanc 0%, fruits rouges & amandes", styles: ["Rapide (-15 min)", "Salades & Frais", "Végétarien"], prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 11)}g fromage blanc 0%`, `100g fruits rouges`, `15g amandes`], steps: ["Mélanger le fromage blanc avec les fruits rouges et les amandes."] },
+                    { title: "Shaker Whey Isolate & banane", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "2 min", ing: (p, c) => [`${Math.round(p * 1.15)}g Whey Isolate`, `1 banane moyenne`], steps: ["Mélanger la Whey avec 250ml d'eau fraîche et déguster avec la banane."] },
+                    { title: "Poire fraîche, Skyr 0% & beurre de cacahuète", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "3 min", ing: (p, c) => [`${Math.round(p * 9)}g Skyr 0%`, `1 poire en dés`, `10g beurre de cacahuète 100%`], steps: ["Mélanger la poire au Skyr et ajouter un filet de beurre de cacahuète."] },
+                    { title: "Mini-wrap roulé filet de dinde & concombre", styles: ["Wraps & Bowls", "Rapide (-15 min)"], prepTime: "3 min", ing: (p, c) => [`70g blanc de dinde`, `1 petit wrap (40g)`, `80g concombre`], steps: ["Rouler la dinde et les bâtonnets de concombre dans le wrap."] },
+                    { title: "Compote sans sucre, galettes de riz & carré chocolat 70%", styles: ["Rapide (-15 min)", "Végétarien"], prepTime: "2 min", ing: (p, c) => [`100g compote de pomme sans sucre`, `2 galettes de riz`, `15g chocolat noir 70%`], steps: ["Déguster la compote avec les galettes de riz et le chocolat noir."] }
                 ]
             };
 
-            const orderPool = (list) => {
-                if (!prioritizeAirfryer) return shuffleArray(list);
-                const af = shuffleArray(list.filter(r => r.airfryer));
-                const other = shuffleArray(list.filter(r => !r.airfryer));
-                return [...af, ...other];
+            const isAllowed = (recipe) => {
+                if (!excludedKeywords.length) return true;
+                const sampleText = (recipe.title + " " + recipe.ing(30, 30).join(" ")).toLowerCase();
+                return !excludedKeywords.some(kw => sampleText.includes(kw.toLowerCase()));
             };
 
-            const bPool = orderPool(bank.breakfast);
-            const lPool = orderPool(bank.lunch);
-            const dPool = orderPool(bank.dinner);
-            const sPool = orderPool(bank.snack);
+            const scoreAndOrder = (list) => {
+                let filtered = list.filter(isAllowed);
+                if (!filtered.length) filtered = list; // Sécurité si tout est exclu
+                const shuffled = shuffleArray(filtered);
+                if (!selectedStyles.length) return shuffled;
+                return shuffled.sort((a, b) => {
+                    const aHits = (a.styles || []).filter(st => selectedStyles.includes(st)).length;
+                    const bHits = (b.styles || []).filter(st => selectedStyles.includes(st)).length;
+                    return bHits - aHits;
+                });
+            };
+
+            const bPool = scoreAndOrder(bank.breakfast);
+            const lPool = scoreAndOrder(bank.lunch);
+            const dPool = scoreAndOrder(bank.dinner);
+            const sPool = scoreAndOrder(bank.snack);
 
             const days = [];
             for (let d = 1; d <= daysCount; d++) {
@@ -2094,8 +2442,10 @@ Réponds UNIQUEMENT en JSON strict :
         async function generateMultiDayPlan() {
             const daysCount = parseInt(document.getElementById("plan-days-count").value) || 7;
             const structure = document.getElementById("plan-meal-structure").value;
-            const prefs = document.getElementById("plan-prefs").value.trim();
-            const prioritizeAirfryer = document.getElementById("plan-airfryer-oven").checked;
+            const prefsText = document.getElementById("plan-prefs").value.trim();
+            const planPrefs = ensurePlanPrefs();
+            const selectedStyles = planPrefs.styles || [];
+            const { labels: excludedLabels, keywords: excludedKeywords } = getExcludedLabelsAndKeywords();
             const targets = getCalibratedPlanTargets();
             const hasSnack = structure === "3_with_snack";
 
@@ -2117,9 +2467,9 @@ OBJECTIFS STRICTS PAR JOUR :
 RÈGLES DE DIVERSITÉ IMPÉRATIVES :
 - AUCUNE répétition de plat sur l'ensemble des ${daysCount} jours.
 - Ne jamais mettre la même source de protéine au déjeuner et au dîner d'un même jour.
-- Varier poulet, dinde, bœuf 5%, saumon, cabillaud, thon, crevettes, œufs, Skyr.
-${prioritizeAirfryer ? "- Priorise majoritairement des recettes healthy cuites au FOUR ou à l'AIRFRYER en précisant température et durée." : ""}
-${prefs ? `- Préférences / Exclusions : ${prefs}` : ""}
+${selectedStyles.length ? `- ENVIES & STYLES À PRIORISER : ${selectedStyles.join(", ")}.` : ""}
+${excludedLabels.length ? `- ALIMENTS STRICTEMENT INTERDITS (NE JAMAIS UTILISER) : ${excludedLabels.join(", ")}.` : ""}
+${prefsText ? `- Précisions supplémentaires : ${prefsText}` : ""}
 
 Réponds UNIQUEMENT en JSON strict :
 {
@@ -2158,11 +2508,11 @@ Réponds UNIQUEMENT en JSON strict :
             }
 
             if (!generatedDays) {
-                generatedDays = buildDiversifiedLocalPlan(daysCount, structure, targets, prioritizeAirfryer);
+                generatedDays = buildDiversifiedLocalPlan(daysCount, structure, targets, selectedStyles, excludedKeywords);
             }
 
             appState.mealPlan = {
-                daysCount, structure, prefs, prioritizeAirfryer, targets,
+                daysCount, structure, prefs: prefsText, targets,
                 createdAt: new Date().toLocaleDateString("fr-FR"),
                 days: generatedDays,
                 checklist: {}
@@ -2172,7 +2522,7 @@ Réponds UNIQUEMENT en JSON strict :
             btn.disabled = false;
             btn.innerHTML = orig;
             renderPlanningView();
-            showToast(`Planning ${daysCount} jour(s) diversifié prêt !`, "success");
+            showToast(`Planning ${daysCount} jour(s) personnalisé prêt !`, "success");
         }
 
         function toggleChecklistCell(key) {
@@ -2547,6 +2897,7 @@ Réponds UNIQUEMENT en JSON strict :
             }
             renderFoodLibrary();
             renderJournalView();
+            renderPlanPreferencesUI();
             renderPlanningView();
             renderMeasurementsView();
         }
